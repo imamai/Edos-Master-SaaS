@@ -105,6 +105,10 @@ export async function middleware(request: NextRequest) {
 
 function createMiddlewareClient(request: NextRequest) {
   const response = NextResponse.next({ request })
+  const cookieDomain =
+    process.env.NODE_ENV === 'production'
+      ? `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'}`
+      : undefined
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -117,7 +121,10 @@ function createMiddlewareClient(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, {
+              ...options,
+              ...(cookieDomain ? { domain: cookieDomain } : {}),
+            })
           )
         },
       },
