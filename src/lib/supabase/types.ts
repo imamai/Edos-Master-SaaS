@@ -330,6 +330,63 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['audit_logs']['Row'], 'id' | 'created_at'>
         Update: never
       }
+      tenants_etims_settings: {
+        Row: {
+          id: string
+          tenant_id: string
+          is_enabled: boolean
+          environment: 'sandbox' | 'production'
+          kra_pin: string | null
+          branch_id: string
+          device_serial: string
+          next_invoice_no: number
+          initialized_at: string | null
+          init_response: Record<string, unknown> | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['tenants_etims_settings']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['tenants_etims_settings']['Insert']>
+      }
+      etims_invoices: {
+        Row: {
+          id: string
+          tenant_id: string
+          sale_id: string
+          etims_invoice_no: number
+          status: 'pending' | 'submitted' | 'confirmed' | 'failed' | 'cancelled'
+          irn: string | null
+          qr_code: string | null
+          result_code: string | null
+          result_msg: string | null
+          request_payload: Record<string, unknown> | null
+          response_payload: Record<string, unknown> | null
+          submitted_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['etims_invoices']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['etims_invoices']['Insert']>
+      }
+      etims_queue: {
+        Row: {
+          id: string
+          tenant_id: string
+          sale_id: string
+          idempotency_key: string
+          status: 'pending' | 'processing' | 'done' | 'failed'
+          attempt_count: number
+          max_attempts: number
+          last_error: string | null
+          last_attempt_at: string | null
+          next_attempt_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['etims_queue']['Row'], 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Database['public']['Tables']['etims_queue']['Insert']>
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -344,6 +401,10 @@ export type Database = {
       generate_receipt_number: {
         Args: { p_tenant_id: string }
         Returns: string
+      }
+      claim_etims_invoice_no: {
+        Args: { p_tenant_id: string }
+        Returns: number
       }
     }
     Enums: Record<string, never>

@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   ShoppingCart, Package, Receipt, Users, Truck, TrendingDown,
-  BarChart3, Settings, LogOut, Store, LayoutDashboard
+  BarChart3, Settings, LogOut, Store, LayoutDashboard, ShieldCheck
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Tenant, Profile } from '@/types'
@@ -32,6 +32,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
     { href: `${base}/suppliers`, label: 'Suppliers', icon: Truck },
     { href: `${base}/expenses`, label: 'Expenses', icon: TrendingDown },
     { href: `${base}/reports`, label: 'Reports', icon: BarChart3 },
+    { href: `${base}/etims`, label: 'eTIMS', icon: ShieldCheck },
     { href: `${base}/settings`, label: 'Settings', icon: Settings },
   ]
 

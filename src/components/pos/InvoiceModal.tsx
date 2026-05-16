@@ -3,9 +3,16 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Printer, X, Download } from 'lucide-react'
+import { Printer, X, Download, ShieldCheck, Clock, AlertCircle } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
+
+interface EtimsStatus {
+  status:    'pending' | 'submitted' | 'confirmed' | 'failed' | null
+  irn:       string | null
+  qr_code:   string | null
+  result_msg: string | null
+}
 
 interface Props {
   saleId: string
@@ -22,6 +29,7 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
   const supabase = createClient()
   const printRef = useRef<HTMLDivElement>(null)
   const [sale, setSale] = useState<Record<string, unknown> | null>(null)
+  const [etims, setEtims] = useState<EtimsStatus | null>(null)
 
   useEffect(() => {
     supabase
@@ -30,6 +38,16 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
       .eq('id', saleId)
       .single()
       .then(({ data }) => { if (data) setSale(data as Record<string, unknown>) })
+
+    // Load eTIMS status for this invoice
+    supabase
+      .from('etims_invoices')
+      .select('status, irn, qr_code, result_msg')
+      .eq('sale_id', saleId)
+      .single()
+      .then(({ data }) => {
+        if (data) setEtims(data as EtimsStatus)
+      })
   }, [saleId])
 
   function handleDownloadPDF() {
@@ -342,6 +360,40 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
                 </span>
               </div>
             </div>
+
+            {/* eTIMS compliance badge */}
+            {etims && (
+              <div className={`rounded-xl p-3 mb-4 flex items-start gap-2.5 ${
+                etims.status === 'submitted' || etims.status === 'confirmed'
+                  ? 'bg-green-50 border border-green-200'
+                  : etims.status === 'failed'
+                  ? 'bg-red-50 border border-red-200'
+                  : 'bg-yellow-50 border border-yellow-200'
+              }`}>
+                {etims.status === 'submitted' || etims.status === 'confirmed'
+                  ? <ShieldCheck className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" />
+                  : etims.status === 'failed'
+                  ? <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                  : <Clock className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />}
+                <div className="min-w-0">
+                  <p className={`text-xs font-bold uppercase ${
+                    etims.status === 'submitted' || etims.status === 'confirmed' ? 'text-green-700' :
+                    etims.status === 'failed' ? 'text-red-700' : 'text-yellow-700'
+                  }`}>
+                    {etims.status === 'submitted' || etims.status === 'confirmed'
+                      ? 'KRA eTIMS Verified Tax Invoice'
+                      : etims.status === 'failed' ? 'eTIMS Submission Failed'
+                      : 'eTIMS Submission Pending'}
+                  </p>
+                  {etims.irn && (
+                    <p className="text-xs text-gray-600 mt-0.5 break-all">IRN: {etims.irn}</p>
+                  )}
+                  {etims.qr_code && (
+                    <p className="text-xs text-gray-500 mt-0.5 font-mono break-all truncate">QR: {etims.qr_code}</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Signatures */}
             <div className="flex justify-between mt-8 mb-4">

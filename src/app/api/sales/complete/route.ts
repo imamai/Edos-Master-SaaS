@@ -62,6 +62,39 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 5. Queue eTIMS submission (non-blocking – failure here must not fail the sale)
+    try {
+      const { data: etimsSettings } = await supabase
+        .from('tenants_etims_settings')
+        .select('is_enabled')
+        .eq('tenant_id', tenantId)
+        .single()
+
+      if (etimsSettings?.is_enabled) {
+        // Add to queue immediately for offline resilience
+        await supabase.from('etims_queue').upsert({
+          tenant_id:       tenantId,
+          sale_id:         sale.id,
+          idempotency_key: `${tenantId}:${sale.id}`,
+          status:          'pending',
+          next_attempt_at: new Date().toISOString(),
+        }, { onConflict: 'idempotency_key' })
+
+        // Fire-and-forget real-time Edge Function call
+        const edgeUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/etims-submit-invoice`
+        fetch(edgeUrl, {
+          method:  'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            'Content-Type':  'application/json',
+          },
+          body: JSON.stringify({ saleId: sale.id, tenantId }),
+        }).catch((err) => console.warn('eTIMS async submit error:', err))
+      }
+    } catch (etimsErr) {
+      console.warn('eTIMS queue error (non-fatal):', etimsErr)
+    }
+
     return NextResponse.json({ sale })
   } catch (err) {
     console.error('Complete sale error:', err)
