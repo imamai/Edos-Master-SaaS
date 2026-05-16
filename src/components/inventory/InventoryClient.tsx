@@ -34,18 +34,22 @@ export default function InventoryClient() {
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [adjustProduct, setAdjustProduct] = useState<Product | null>(null)
   const [branchId, setBranchId] = useState<string | null>(null)
+  const [maxProducts, setMaxProducts] = useState<number>(-1)
 
   const loadData = useCallback(async () => {
     if (!tenantId) return
     setLoading(true)
-    const [catResult, branchResult] = await Promise.all([
+    const [catResult, branchResult, tenantResult] = await Promise.all([
       supabase.from('categories').select('*').eq('tenant_id', tenantId).eq('is_active', true).order('name'),
       supabase.auth.getUser().then(({ data: { user } }) =>
         user ? supabase.from('profiles').select('branch_id').eq('id', user.id).single() : { data: null }
       ),
+      supabase.from('tenants').select('plan:plans(max_products)').eq('id', tenantId).single(),
     ])
     setCategories(catResult.data as Category[] ?? [])
     setBranchId(branchResult.data?.branch_id ?? null)
+    const tenantData = tenantResult.data as unknown as { plan: { max_products: number } | null } | null
+    setMaxProducts(tenantData?.plan?.max_products ?? -1)
 
     let q = supabase.from('product_stock').select('*').eq('tenant_id', tenantId).eq('is_active', true)
     if (search.trim()) q = q.or(`name.ilike.%${search}%,sku.ilike.%${search}%`)
@@ -94,7 +98,14 @@ export default function InventoryClient() {
             title="Inventory Report"
           />
           <button
-            onClick={() => { setEditProduct(null); setShowForm(true) }}
+            onClick={() => {
+              if (maxProducts !== -1 && products.length >= maxProducts) {
+                toast.error(`Your plan allows a maximum of ${maxProducts} products. Upgrade your plan to add more.`)
+                return
+              }
+              setEditProduct(null)
+              setShowForm(true)
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition"
           >
             <Plus className="w-4 h-4" />

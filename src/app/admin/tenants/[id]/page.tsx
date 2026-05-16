@@ -1,11 +1,11 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import { formatDate, formatCurrency, formatDateTime } from '@/lib/utils'
 import TenantActions from '@/components/admin/TenantActions'
 
 export default async function TenantDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
+  const supabase = await createServiceClient()
 
   const { data: tenant } = await supabase
     .from('tenants')

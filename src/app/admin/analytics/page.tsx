@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate } from '@/lib/utils'
 
 export default async function AnalyticsPage() {
-  const supabase = await createClient()
+  const supabase = await createServiceClient()
 
   const now = new Date()
   const last30 = new Date(now)

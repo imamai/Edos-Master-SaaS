@@ -2,8 +2,15 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
 
+function getCookieDomain() {
+  return process.env.NODE_ENV === 'production'
+    ? `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'}`
+    : undefined
+}
+
 export async function createClient() {
   const cookieStore = await cookies()
+  const cookieDomain = getCookieDomain()
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +23,7 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, cookieDomain ? { ...options, domain: cookieDomain } : options)
             )
           } catch {
             // Server Component — cookies set by middleware

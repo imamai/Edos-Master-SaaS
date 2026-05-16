@@ -31,6 +31,20 @@ export async function POST(req: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
+  // Enforce plan user limit
+  const [{ count: currentUsers }, tenantResult] = await Promise.all([
+    admin.from('profiles').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).eq('is_active', true),
+    admin.from('tenants').select('plan:plans(max_users)').eq('id', tenantId).single(),
+  ])
+  const tenantRaw = tenantResult.data as unknown as { plan: { max_users: number } | null } | null
+  const maxUsers = tenantRaw?.plan?.max_users ?? -1
+  if (maxUsers !== -1 && (currentUsers ?? 0) >= maxUsers) {
+    return NextResponse.json(
+      { message: `Your plan allows a maximum of ${maxUsers} users. Upgrade your plan to invite more staff.` },
+      { status: 403 }
+    )
+  }
+
   try {
     const redirectTo = process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000/tenant/dashboard'

@@ -1,8 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { Users, Building2, TrendingUp, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { Building2, TrendingUp, AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react'
 
-async function getAdminStats(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function getAdminStats(supabase: Awaited<ReturnType<typeof createServiceClient>>) {
   const [tenants, recentTenants, subscriptions] = await Promise.all([
     supabase.from('tenants').select('id, status, created_at'),
     supabase.from('tenants').select('id, name, subdomain, status, plan_id, created_at, plan:plans(name)').order('created_at', { ascending: false }).limit(8),
@@ -39,7 +39,7 @@ const statusConfig = {
 }
 
 export default async function AdminDashboard() {
-  const supabase = await createClient()
+  const supabase = await createServiceClient()
   const stats = await getAdminStats(supabase)
 
   const statCards = [
@@ -100,7 +100,7 @@ export default async function AdminDashboard() {
         <div className="lg:col-span-2 bg-white rounded-xl border p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-gray-900">Recent Tenants</h2>
-            <a href="/tenants" className="text-sm text-blue-600 hover:underline">View all</a>
+            <a href="/admin/tenants" className="text-sm text-blue-600 hover:underline">View all</a>
           </div>
           <div className="space-y-3">
             {stats.recent.map((tenant: { id: string; name: string; subdomain: string; status: string; created_at: string; plan?: { name: string } | null }) => {

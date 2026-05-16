@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
@@ -8,8 +8,20 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
 import { createClient } from '@/lib/supabase/client'
-import { slugify } from '@/lib/utils'
+import { slugify, formatCurrency } from '@/lib/utils'
 import { CheckCircle, Loader2 } from 'lucide-react'
+
+interface Plan {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  price_monthly: number
+  max_products: number
+  max_users: number
+  max_branches: number
+  features: string[]
+}
 
 const schema = z.object({
   full_name: z.string().min(2, 'Enter your full name'),
@@ -35,6 +47,23 @@ export default function RegisterPage() {
   const [step, setStep] = useState(1)
   const [checkingSubdomain, setCheckingSubdomain] = useState(false)
   const [subdomainAvailable, setSubdomainAvailable] = useState<boolean | null>(null)
+  const [plans, setPlans] = useState<Plan[]>([])
+  const [selectedPlanSlug, setSelectedPlanSlug] = useState('basic')
+
+  useEffect(() => {
+    supabase
+      .from('plans')
+      .select('id, name, slug, description, price_monthly, max_products, max_users, max_branches, features')
+      .eq('is_active', true)
+      .order('price_monthly')
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setPlans(data as Plan[])
+          setSelectedPlanSlug((data[0] as Plan).slug)
+        }
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -74,32 +103,18 @@ export default function RegisterPage() {
       return
     }
 
-    // 1. Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        data: { full_name: data.full_name, role: 'owner' },
-        emailRedirectTo: `${window.location.origin}/api/auth/callback`,
-      },
-    })
-
-    if (authError || !authData.user) {
-      toast.error(authError?.message || 'Registration failed')
-      return
-    }
-
-    // 2. Create tenant via API (uses service role to bypass RLS)
+    // Create auth user + tenant in one server-side call (bypasses email rate limits)
     const res = await fetch('/api/tenants', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        user_id: authData.user.id,
         name: data.business_name,
         subdomain: data.subdomain,
         owner_email: data.email,
         owner_name: data.full_name,
         phone: data.phone,
+        plan_slug: selectedPlanSlug,
+        password: data.password,
       }),
     })
 
@@ -109,7 +124,7 @@ export default function RegisterPage() {
       return
     }
 
-    toast.success('Account created! Check your email to verify.')
+    toast.success('Account created! Check your email to confirm and access your dashboard.')
     router.push('/login')
   }
 
@@ -205,6 +220,49 @@ export default function RegisterPage() {
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+
+          {plans.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Choose a Plan</label>
+              <div className="space-y-2">
+                {plans.map((plan) => (
+                  <label
+                    key={plan.slug}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      selectedPlanSlug === plan.slug
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="plan"
+                      value={plan.slug}
+                      checked={selectedPlanSlug === plan.slug}
+                      onChange={() => setSelectedPlanSlug(plan.slug)}
+                      className="mt-0.5 accent-blue-600"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-gray-900">{plan.name}</span>
+                        <span className="text-sm font-medium text-blue-600 whitespace-nowrap">
+                          {plan.price_monthly === 0 ? 'Free trial' : `${formatCurrency(plan.price_monthly)}/mo`}
+                        </span>
+                      </div>
+                      {plan.description && (
+                        <p className="text-xs text-gray-500 mt-0.5">{plan.description}</p>
+                      )}
+                      <div className="flex gap-3 mt-1 text-xs text-gray-400">
+                        <span>{plan.max_products === -1 ? 'Unlimited products' : `${plan.max_products} products`}</span>
+                        <span>{plan.max_users === -1 ? 'Unlimited users' : `${plan.max_users} users`}</span>
+                        <span>{plan.max_branches === -1 ? 'Unlimited branches' : `${plan.max_branches} branch${plan.max_branches !== 1 ? 'es' : ''}`}</span>
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"

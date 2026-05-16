@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { formatDate, formatCurrency } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, AlertTriangle, Search } from 'lucide-react'
 import Link from 'next/link'
@@ -22,7 +22,7 @@ export default async function TenantsPage({
   const page = parseInt(params.page || '1')
   const pageSize = 20
 
-  const supabase = await createClient()
+  const supabase = await createServiceClient()
 
   let query = supabase
     .from('tenants')
@@ -114,7 +114,7 @@ export default async function TenantsPage({
                   <td className="px-4 py-3 text-sm text-gray-500">{formatDate(tenant.created_at)}</td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/tenants/${tenant.id}`}
+                      href={`/admin/tenants/${tenant.id}`}
                       className="text-blue-600 text-sm hover:underline"
                     >
                       View
