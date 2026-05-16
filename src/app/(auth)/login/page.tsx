@@ -46,31 +46,32 @@ export default function LoginPage() {
     const role = profile?.role
     const tenantId = profile?.tenant_id
 
-    const isLocalhost = window.location.hostname.includes('localhost')
-    const port = isLocalhost ? `:${window.location.port || '3000'}` : ''
-    const protocol = isLocalhost ? 'http' : 'https'
-    const rootDomain = isLocalhost ? 'localhost' : (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke')
+    const hostname = window.location.hostname
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'
+    const isLocalhost = hostname.includes('localhost')
+    const isOnRootDomain = hostname === rootDomain || hostname.endsWith(`.${rootDomain}`)
+    const useSubdomainRouting = isOnRootDomain && !isLocalhost
 
     if (role === 'super_admin') {
-      if (isLocalhost) {
-        router.push('/admin')
+      if (useSubdomainRouting) {
+        window.location.href = `https://admin.${rootDomain}`
       } else {
-        window.location.href = `${protocol}://admin.${rootDomain}${port}`
+        router.push('/admin')
       }
     } else if (tenantId) {
-      if (isLocalhost) {
-        router.push('/tenant')
-      } else {
+      if (useSubdomainRouting) {
         const { data: tenant } = await supabase
           .from('tenants')
           .select('subdomain')
           .eq('id', tenantId)
           .single()
         if (tenant?.subdomain) {
-          window.location.href = `${protocol}://${tenant.subdomain}.${rootDomain}${port}`
+          window.location.href = `https://${tenant.subdomain}.${rootDomain}`
         } else {
-          router.push('/')
+          router.push('/tenant')
         }
+      } else {
+        router.push('/tenant')
       }
     } else {
       router.push('/')

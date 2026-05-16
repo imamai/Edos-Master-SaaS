@@ -105,10 +105,12 @@ export async function middleware(request: NextRequest) {
 
 function createMiddlewareClient(request: NextRequest) {
   const response = NextResponse.next({ request })
-  const cookieDomain =
-    process.env.NODE_ENV === 'production'
-      ? `.${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'}`
-      : undefined
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || ''
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'
+  // Only set cross-subdomain cookie when actually on the root domain
+  const cookieDomain = (host === rootDomain || host.endsWith(`.${rootDomain}`))
+    ? `.${rootDomain}`
+    : undefined
 
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
