@@ -13,7 +13,7 @@ import { useTenantId } from '@/lib/hooks/useTenantId'
 interface Product {
   id: string; name: string; sku: string | null; barcode: string | null
   category_id: string | null; category_name: string; unit: string
-  buying_price: number; selling_price: number; stock_quantity: number
+  cost_price: number; selling_price: number; stock_quantity: number
   reorder_level: number; vat_rate: number; description: string | null
   has_serial?: boolean; has_warranty?: boolean; warranty_months?: number
   is_active: boolean
@@ -47,7 +47,7 @@ export default function InventoryClient() {
       supabase.from('tenants').select('plan:plans(max_products)').eq('id', tenantId).single(),
     ])
     setCategories(catResult.data as Category[] ?? [])
-    setBranchId(branchResult.data?.branch_id ?? null)
+    setBranchId((branchResult.data as { branch_id: string | null } | null)?.branch_id ?? null)
     const tenantData = tenantResult.data as unknown as { plan: { max_products: number } | null } | null
     setMaxProducts(tenantData?.plan?.max_products ?? -1)
 
@@ -65,14 +65,15 @@ export default function InventoryClient() {
 
   async function deleteProduct(id: string) {
     if (!confirm('Deactivate this product?')) return
-    const { error } = await supabase.from('products').update({ is_active: false }).eq('id', id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from('products').update({ is_active: false }).eq('id', id)
     if (error) toast.error(error.message)
     else { toast.success('Product deactivated'); loadData() }
   }
 
   const lowStockCount = products.filter((p) => p.stock_quantity > 0 && p.stock_quantity <= p.reorder_level).length
   const outOfStockCount = products.filter((p) => p.stock_quantity === 0).length
-  const totalValue = products.reduce((s, p) => s + p.stock_quantity * p.buying_price, 0)
+  const totalValue = products.reduce((s, p) => s + (p.stock_quantity || 0) * (p.cost_price || 0), 0)
 
   return (
     <div className="space-y-5">
@@ -87,7 +88,7 @@ export default function InventoryClient() {
               { header: 'Name', key: 'name', width: 28 },
               { header: 'SKU', key: 'sku', width: 16 },
               { header: 'Category', key: 'category_name', width: 18 },
-              { header: 'Buy Price', key: 'buying_price', width: 14 },
+              { header: 'Buy Price', key: 'cost_price', width: 14 },
               { header: 'Sell Price', key: 'selling_price', width: 14 },
               { header: 'Stock', key: 'stock_quantity', width: 12 },
               { header: 'Unit', key: 'unit', width: 10 },
@@ -187,7 +188,7 @@ export default function InventoryClient() {
                       </td>
                       <td className="px-4 py-3 text-slate-600 font-mono text-xs">{product.sku}</td>
                       <td className="px-4 py-3 text-slate-600 text-xs">{product.category_name}</td>
-                      <td className="px-4 py-3 text-right text-slate-700">{formatCurrency(product.buying_price)}</td>
+                      <td className="px-4 py-3 text-right text-slate-700">{formatCurrency(product.cost_price)}</td>
                       <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatCurrency(product.selling_price)}</td>
                       <td className="px-4 py-3 text-right">
                         <span className={`font-bold ${isOut ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-green-600'}`}>
@@ -250,10 +251,11 @@ export default function InventoryClient() {
 }
 
 function StatCard({ label, value, color, alert = false }: { label: string; value: string; color: 'blue' | 'amber' | 'red' | 'green'; alert?: boolean }) {
+  const valueColor = alert ? 'text-red-600' : color === 'green' ? 'text-green-600' : color === 'amber' ? 'text-amber-600' : color === 'red' ? 'text-red-600' : 'text-blue-600'
   return (
     <div className="bg-white rounded-2xl border border-slate-100 p-4">
       <p className="text-sm text-slate-500">{label}</p>
-      <p className={`text-2xl font-bold mt-1 ${alert ? 'text-red-600' : 'text-slate-800'}`}>{value}</p>
+      <p className={`text-2xl font-bold mt-1 ${valueColor}`}>{value}</p>
     </div>
   )
 }

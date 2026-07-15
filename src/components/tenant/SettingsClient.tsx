@@ -44,7 +44,7 @@ interface Category { id: string; name: string; color: string; is_active: boolean
 
 const ROLES = ['cashier', 'staff', 'manager', 'owner'] as const
 
-const tabs = ['Business', 'Categories', 'Staff', 'Billing', 'Branches']
+const tabs = ['Business', 'Categories', 'Staff', 'Billing', 'Branches', 'M-Pesa']
 
 export default function SettingsClient({ tenant, plans, staff: initialStaff, branches, currentUserId, currentUserRole }: Props) {
   const [activeTab, setActiveTab] = useState('Business')
@@ -77,6 +77,32 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
   const [updatingStaff, setUpdatingStaff] = useState<string | null>(null)
 
   const canManageStaff = ['owner', 'manager', 'super_admin'].includes(currentUserRole)
+  const canManageMpesa = ['owner', 'manager', 'super_admin'].includes(currentUserRole)
+
+  // M-Pesa settings state
+  const [mpesaLoading, setMpesaLoading] = useState(false)
+  const [mpesaSaving, setMpesaSaving] = useState(false)
+  const [mpesaSettings, setMpesaSettings] = useState<{
+    environment: 'sandbox' | 'production'
+    consumer_key: string
+    consumer_secret: string
+    shortcode: string
+    passkey: string
+    initiator_name: string
+    security_credential: string
+    is_active: boolean
+  }>({
+    environment: 'sandbox',
+    consumer_key: '',
+    consumer_secret: '',
+    shortcode: '',
+    passkey: '',
+    initiator_name: '',
+    security_credential: '',
+    is_active: true,
+  })
+  const [mpesaLoaded, setMpesaLoaded] = useState(false)
+  const [showMpesaSecrets, setShowMpesaSecrets] = useState(false)
 
   const { register, handleSubmit, formState: { isSubmitting } } = useForm<TenantForm>({
     resolver: zodResolver(tenantSchema),
@@ -99,7 +125,53 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
 
   useEffect(() => {
     if (activeTab === 'Categories') loadCategories()
+    if (activeTab === 'M-Pesa' && !mpesaLoaded) loadMpesaSettings()
   }, [activeTab])
+
+  async function loadMpesaSettings() {
+    setMpesaLoading(true)
+    try {
+      const res = await fetch('/api/mpesa/settings')
+      const json = await res.json()
+      if (json.settings) {
+        setMpesaSettings({
+          environment: json.settings.environment ?? 'sandbox',
+          consumer_key: json.settings.consumer_key ?? '',
+          consumer_secret: json.settings.consumer_secret ?? '',
+          shortcode: json.settings.shortcode ?? '',
+          passkey: json.settings.passkey ?? '',
+          initiator_name: json.settings.initiator_name ?? '',
+          security_credential: json.settings.security_credential ?? '',
+          is_active: json.settings.is_active ?? true,
+        })
+      }
+      setMpesaLoaded(true)
+    } catch {
+      toast.error('Failed to load M-Pesa settings')
+    } finally {
+      setMpesaLoading(false)
+    }
+  }
+
+  async function saveMpesaSettings(e: React.FormEvent) {
+    e.preventDefault()
+    if (!canManageMpesa) return
+    setMpesaSaving(true)
+    try {
+      const res = await fetch('/api/mpesa/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mpesaSettings),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.message || 'Save failed')
+      toast.success('M-Pesa settings saved')
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Save failed')
+    } finally {
+      setMpesaSaving(false)
+    }
+  }
 
   async function loadCategories() {
     setCatsLoading(true)
@@ -706,6 +778,175 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {activeTab === 'M-Pesa' && (
+        <div className="max-w-lg space-y-6">
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <p className="text-sm text-green-800 font-medium">Safaricom Daraja API Credentials</p>
+            <p className="text-xs text-green-700 mt-1">
+              Enter your own M-Pesa Daraja app credentials. Each account uses its own shortcode and keys.
+              Get credentials at <span className="font-mono">developer.safaricom.co.ke</span>.
+            </p>
+          </div>
+
+          {mpesaLoading ? (
+            <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading settings…
+            </div>
+          ) : (
+            <form onSubmit={saveMpesaSettings} className="space-y-5">
+              {/* Environment toggle */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+                <div className="flex gap-3">
+                  {(['sandbox', 'production'] as const).map((env) => (
+                    <label key={env} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="environment"
+                        value={env}
+                        checked={mpesaSettings.environment === env}
+                        onChange={() => setMpesaSettings(s => ({ ...s, environment: env }))}
+                        disabled={!canManageMpesa}
+                        className="accent-green-600"
+                      />
+                      <span className={`text-sm capitalize ${env === 'production' ? 'text-green-700 font-medium' : 'text-gray-600'}`}>
+                        {env}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {mpesaSettings.environment === 'production' && (
+                  <p className="text-xs text-amber-600 mt-1">Live environment — real money transactions will occur.</p>
+                )}
+              </div>
+
+              {/* Active toggle */}
+              <div className="flex items-center justify-between bg-white border rounded-xl p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">Enable M-Pesa</p>
+                  <p className="text-xs text-gray-500">Allow M-Pesa as a payment method at the POS</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => canManageMpesa && setMpesaSettings(s => ({ ...s, is_active: !s.is_active }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${mpesaSettings.is_active ? 'bg-green-600' : 'bg-gray-300'} ${!canManageMpesa ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
+                  <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${mpesaSettings.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
+              </div>
+
+              {/* Credentials */}
+              <div className="bg-white border rounded-xl p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">API Credentials</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowMpesaSecrets(v => !v)}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    {showMpesaSecrets ? 'Hide' : 'Show'} secrets
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Consumer Key</label>
+                    <input
+                      type={showMpesaSecrets ? 'text' : 'password'}
+                      value={mpesaSettings.consumer_key}
+                      onChange={e => setMpesaSettings(s => ({ ...s, consumer_key: e.target.value }))}
+                      disabled={!canManageMpesa}
+                      placeholder="Daraja app consumer key"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Consumer Secret</label>
+                    <input
+                      type={showMpesaSecrets ? 'text' : 'password'}
+                      value={mpesaSettings.consumer_secret}
+                      onChange={e => setMpesaSettings(s => ({ ...s, consumer_secret: e.target.value }))}
+                      disabled={!canManageMpesa}
+                      placeholder="Daraja app consumer secret"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Business Shortcode</label>
+                    <input
+                      type="text"
+                      value={mpesaSettings.shortcode}
+                      onChange={e => setMpesaSettings(s => ({ ...s, shortcode: e.target.value }))}
+                      disabled={!canManageMpesa}
+                      placeholder="e.g. 174379"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Passkey (Lipa Na M-Pesa)</label>
+                    <input
+                      type={showMpesaSecrets ? 'text' : 'password'}
+                      value={mpesaSettings.passkey}
+                      onChange={e => setMpesaSettings(s => ({ ...s, passkey: e.target.value }))}
+                      disabled={!canManageMpesa}
+                      placeholder="STK Push passkey"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Optional B2C / Refund fields */}
+              <details className="bg-white border rounded-xl">
+                <summary className="px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer select-none">
+                  B2C / Refund credentials (optional)
+                </summary>
+                <div className="px-4 pb-4 space-y-4 border-t pt-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Initiator Name</label>
+                    <input
+                      type="text"
+                      value={mpesaSettings.initiator_name}
+                      onChange={e => setMpesaSettings(s => ({ ...s, initiator_name: e.target.value }))}
+                      disabled={!canManageMpesa}
+                      placeholder="B2C initiator name"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Security Credential</label>
+                    <input
+                      type={showMpesaSecrets ? 'text' : 'password'}
+                      value={mpesaSettings.security_credential}
+                      onChange={e => setMpesaSettings(s => ({ ...s, security_credential: e.target.value }))}
+                      disabled={!canManageMpesa}
+                      placeholder="Encrypted security credential"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                    />
+                  </div>
+                </div>
+              </details>
+
+              {canManageMpesa ? (
+                <button
+                  type="submit"
+                  disabled={mpesaSaving}
+                  className="flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-green-700 disabled:opacity-60 transition-colors"
+                >
+                  {mpesaSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                  {mpesaSaving ? 'Saving…' : 'Save M-Pesa Settings'}
+                </button>
+              ) : (
+                <p className="text-xs text-gray-500">Only owners and managers can update M-Pesa settings.</p>
+              )}
+            </form>
+          )}
         </div>
       )}
     </div>

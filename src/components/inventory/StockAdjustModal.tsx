@@ -29,25 +29,27 @@ export default function StockAdjustModal({ product, branchId, tenantId, onClose,
     e.preventDefault()
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    const bid = branchId ?? (await supabase.from('branches').select('id').eq('tenant_id', tenantId).eq('is_main', true).single()).data?.id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
+    const bid = branchId ?? (await db.from('branches').select('id').eq('tenant_id', tenantId).eq('is_main', true).single()).data?.id
 
-    const { data: inventory } = await supabase
+    const { data: inventoryRow } = await db
       .from('inventory').select('*').eq('product_id', product.id).eq('branch_id', bid).single()
 
-    const currentQty = inventory?.quantity ?? 0
+    const currentQty = (inventoryRow as { quantity?: number } | null)?.quantity ?? 0
     let newQty: number
     if (type === 'adjust') newQty = quantity
     else if (type === 'in') newQty = currentQty + quantity
     else newQty = Math.max(0, currentQty - quantity)
 
-    const { error: invError } = await supabase.from('inventory').upsert(
-      { product_id: product.id, branch_id: bid, quantity: newQty, last_updated: new Date().toISOString() },
+    const { error: invError } = await db.from('inventory').upsert(
+      { tenant_id: tenantId, product_id: product.id, branch_id: bid, quantity: newQty, last_updated: new Date().toISOString() },
       { onConflict: 'product_id,branch_id' }
     )
 
     if (!invError && user) {
-      await supabase.from('stock_movements').insert({
-        product_id: product.id, branch_id: bid,
+      await db.from('stock_movements').insert({
+        tenant_id: tenantId, product_id: product.id, branch_id: bid,
         type: type === 'in' ? 'purchase' : type === 'out' ? 'damage' : 'adjustment',
         quantity: type === 'adjust' ? newQty - currentQty : (type === 'in' ? quantity : -quantity),
         notes, created_by: user.id,

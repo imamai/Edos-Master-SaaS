@@ -83,6 +83,21 @@ export interface Subscription {
   plan?: Plan
 }
 
+export interface TenantMpesaSettings {
+  id: string
+  tenant_id: string
+  environment: 'sandbox' | 'production'
+  consumer_key: string
+  consumer_secret: string
+  shortcode: string
+  passkey: string
+  initiator_name: string | null
+  security_credential: string | null
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Profile {
   id: string
   tenant_id: string | null
@@ -300,4 +315,215 @@ export interface CustomJWTClaims {
   tenant_id: string | null
   user_role: UserRole
   subdomain: string | null
+}
+
+// ── Procurement & Inventory Intelligence ──────────────────────
+
+export type POStatus = 'draft' | 'sent' | 'approved' | 'delivered' | 'partial' | 'cancelled'
+export type POType = 'purchase_request' | 'rfq' | 'purchase_order'
+export type GRNStatus = 'draft' | 'confirmed' | 'partial'
+export type StockClassification = 'fast' | 'normal' | 'slow' | 'dead' | 'overstock'
+export type MovementType =
+  | 'sale' | 'purchase' | 'adjustment'
+  | 'transfer_in' | 'transfer_out'
+  | 'return_in' | 'return_out'
+  | 'damage' | 'opening'
+
+export interface ProductBatch {
+  id: string
+  tenant_id: string
+  product_id: string
+  branch_id: string | null
+  supplier_id: string | null
+  batch_number: string
+  initial_quantity: number
+  remaining_qty: number
+  cost_price: number
+  selling_price: number | null
+  expiry_date: string | null
+  received_at: string
+  notes: string | null
+  created_at: string
+  updated_at: string
+  product?: Product
+  supplier?: Supplier
+}
+
+export interface InventoryMovement {
+  id: string
+  tenant_id: string
+  branch_id: string | null
+  product_id: string
+  batch_id: string | null
+  movement_type: MovementType
+  quantity: number
+  unit_cost: number | null
+  unit_price: number | null
+  stock_before: number
+  stock_after: number
+  reference_id: string | null
+  reference_type: string | null
+  notes: string | null
+  performed_by: string | null
+  created_at: string
+  product?: Product
+}
+
+export interface SupplierCatalog {
+  id: string
+  tenant_id: string
+  supplier_id: string
+  product_id: string | null
+  product_name: string
+  supplier_sku: string | null
+  unit: string
+  unit_price: number
+  moq: number
+  vat_applicable: boolean
+  is_available: boolean
+  notes: string | null
+  created_at: string
+  updated_at: string
+  supplier?: Supplier
+  product?: Product
+}
+
+export interface PurchaseOrder {
+  id: string
+  tenant_id: string
+  branch_id: string | null
+  supplier_id: string | null
+  po_number: string
+  po_type: POType
+  status: POStatus
+  subtotal: number
+  vat_amount: number
+  discount_amount: number
+  total_amount: number
+  expected_delivery_date: string | null
+  notes: string | null
+  email_sent_at: string | null
+  approved_by: string | null
+  approved_at: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  supplier?: Supplier
+  items?: PurchaseOrderItem[]
+}
+
+export interface PurchaseOrderItem {
+  id: string
+  purchase_order_id: string
+  tenant_id: string
+  product_id: string | null
+  catalog_item_id: string | null
+  product_name: string
+  product_sku: string | null
+  quantity: number
+  unit: string
+  unit_price: number
+  vat_rate: number
+  vat_amount: number
+  total: number
+  received_quantity: number
+  notes: string | null
+  created_at: string
+  product?: Product
+}
+
+export interface GoodsReceivedNote {
+  id: string
+  tenant_id: string
+  branch_id: string | null
+  purchase_order_id: string | null
+  supplier_id: string | null
+  grn_number: string
+  supplier_invoice_ref: string | null
+  received_date: string
+  status: GRNStatus
+  total_cost: number
+  vat_amount: number
+  notes: string | null
+  received_by: string | null
+  confirmed_by: string | null
+  confirmed_at: string | null
+  created_at: string
+  updated_at: string
+  supplier?: Supplier
+  purchase_order?: PurchaseOrder
+  items?: GRNItem[]
+}
+
+export interface GRNItem {
+  id: string
+  grn_id: string
+  tenant_id: string
+  product_id: string | null
+  po_item_id: string | null
+  product_name: string
+  ordered_qty: number
+  received_qty: number
+  damaged_qty: number
+  unit_cost: number
+  vat_rate: number
+  total_cost: number
+  batch_number: string | null
+  expiry_date: string | null
+  created_at: string
+  product?: Product
+}
+
+export interface VATConfiguration {
+  id: string
+  tenant_id: string
+  is_vat_registered: boolean
+  vat_registration_number: string | null
+  default_vat_rate: number
+  vat_inclusive: boolean
+  apply_vat_to_services: boolean
+  zero_rate_exports: boolean
+  invoice_footer_note: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface StockAlert {
+  id: string
+  tenant_id: string
+  product_id: string | null
+  alert_type: 'low_stock' | 'out_of_stock' | 'dead_stock' | 'overstock' | 'reorder'
+  threshold_days: number
+  is_active: boolean
+  last_triggered_at: string | null
+  notification_email: string | null
+  created_at: string
+  product?: Product
+}
+
+export interface InventoryAgingItem {
+  id: string
+  tenant_id: string
+  branch_id: string | null
+  name: string
+  sku: string | null
+  quantity: number
+  cost_price: number
+  selling_price: number
+  stocked_at: string | null
+  first_sale_at: string | null
+  last_sale_at: string | null
+  total_sold: number
+  low_stock_threshold: number
+  reorder_quantity: number
+  stock_classification: StockClassification
+  days_since_last_sale: number
+  days_in_inventory: number
+  stock_value: number
+  computed_classification: StockClassification | 'out_of_stock'
+  age_bucket: '0-30' | '31-60' | '61-90' | '90+'
+  category_name: string | null
+  supplier_name: string | null
+  category_id: string | null
+  supplier_id: string | null
 }

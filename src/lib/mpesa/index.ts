@@ -1,18 +1,30 @@
 // Safaricom Daraja M-Pesa API Integration
 
-const MPESA_BASE_URL = process.env.MPESA_ENV === 'production'
-  ? 'https://api.safaricom.co.ke'
-  : 'https://sandbox.safaricom.co.ke'
+export interface MpesaCredentials {
+  consumerKey: string
+  consumerSecret: string
+  shortcode: string
+  passkey: string
+  environment: 'sandbox' | 'production'
+  initiatorName?: string
+  securityCredential?: string
+}
 
-async function getAccessToken(): Promise<string> {
-  const credentials = Buffer.from(
-    `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
+function getBaseUrl(environment: 'sandbox' | 'production'): string {
+  return environment === 'production'
+    ? 'https://api.safaricom.co.ke'
+    : 'https://sandbox.safaricom.co.ke'
+}
+
+async function getAccessToken(credentials: MpesaCredentials): Promise<string> {
+  const encoded = Buffer.from(
+    `${credentials.consumerKey}:${credentials.consumerSecret}`
   ).toString('base64')
 
   const response = await fetch(
-    `${MPESA_BASE_URL}/oauth/v1/generate?grant_type=client_credentials`,
+    `${getBaseUrl(credentials.environment)}/oauth/v1/generate?grant_type=client_credentials`,
     {
-      headers: { Authorization: `Basic ${credentials}` },
+      headers: { Authorization: `Basic ${encoded}` },
       cache: 'no-store',
     }
   )
@@ -38,9 +50,8 @@ function getTimestamp(): string {
   )
 }
 
-function generatePassword(timestamp: string): string {
-  const data = `${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`
-  return Buffer.from(data).toString('base64')
+function generatePassword(shortcode: string, passkey: string, timestamp: string): string {
+  return Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64')
 }
 
 export interface STKPushParams {
@@ -59,36 +70,41 @@ export interface STKPushResponse {
   CustomerMessage: string
 }
 
-export async function initiateSTKPush(params: STKPushParams): Promise<STKPushResponse> {
-  const accessToken = await getAccessToken()
+export async function initiateSTKPush(
+  params: STKPushParams,
+  credentials: MpesaCredentials
+): Promise<STKPushResponse> {
+  const accessToken = await getAccessToken(credentials)
   const timestamp = getTimestamp()
-  const password = generatePassword(timestamp)
+  const password = generatePassword(credentials.shortcode, credentials.passkey, timestamp)
 
-  // Format phone: 254XXXXXXXXX
   const phone = params.phone.replace(/^0/, '254').replace(/^\+/, '')
 
   const body = {
-    BusinessShortCode: process.env.MPESA_SHORTCODE,
+    BusinessShortCode: credentials.shortcode,
     Password: password,
     Timestamp: timestamp,
     TransactionType: 'CustomerPayBillOnline',
     Amount: Math.ceil(params.amount),
     PartyA: phone,
-    PartyB: process.env.MPESA_SHORTCODE,
+    PartyB: credentials.shortcode,
     PhoneNumber: phone,
     CallBackURL: params.callbackUrl || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mpesa`,
     AccountReference: params.accountReference.substring(0, 12),
     TransactionDesc: params.transactionDesc.substring(0, 13),
   }
 
-  const response = await fetch(`${MPESA_BASE_URL}/mpesa/stkpush/v1/processrequest`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
+  const response = await fetch(
+    `${getBaseUrl(credentials.environment)}/mpesa/stkpush/v1/processrequest`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    }
+  )
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}))
@@ -107,51 +123,65 @@ export interface STKQueryResponse {
   ResultDesc: string
 }
 
-export async function querySTKStatus(checkoutRequestId: string): Promise<STKQueryResponse> {
-  const accessToken = await getAccessToken()
+export async function querySTKStatus(
+  checkoutRequestId: string,
+  credentials: MpesaCredentials
+): Promise<STKQueryResponse> {
+  const accessToken = await getAccessToken(credentials)
   const timestamp = getTimestamp()
-  const password = generatePassword(timestamp)
+  const password = generatePassword(credentials.shortcode, credentials.passkey, timestamp)
 
-  const response = await fetch(`${MPESA_BASE_URL}/mpesa/stkpushquery/v1/query`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      BusinessShortCode: process.env.MPESA_SHORTCODE,
-      Password: password,
-      Timestamp: timestamp,
-      CheckoutRequestID: checkoutRequestId,
-    }),
-  })
+  const response = await fetch(
+    `${getBaseUrl(credentials.environment)}/mpesa/stkpushquery/v1/query`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        BusinessShortCode: credentials.shortcode,
+        Password: password,
+        Timestamp: timestamp,
+        CheckoutRequestID: checkoutRequestId,
+      }),
+    }
+  )
 
   return response.json()
 }
 
-// B2C for refunds (optional)
-export async function initiateB2C(phone: string, amount: number, remarks: string) {
-  const accessToken = await getAccessToken()
+// B2C for refunds
+export async function initiateB2C(
+  phone: string,
+  amount: number,
+  remarks: string,
+  credentials: MpesaCredentials
+) {
+  const accessToken = await getAccessToken(credentials)
 
-  const response = await fetch(`${MPESA_BASE_URL}/mpesa/b2c/v1/paymentrequest`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      InitiatorName: process.env.MPESA_INITIATOR_NAME,
-      SecurityCredential: process.env.MPESA_SECURITY_CREDENTIAL,
-      CommandID: 'BusinessPayment',
-      Amount: Math.ceil(amount),
-      PartyA: process.env.MPESA_SHORTCODE,
-      PartyB: phone.replace(/^0/, '254').replace(/^\+/, ''),
-      Remarks: remarks,
-      QueueTimeOutURL: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mpesa/b2c/timeout`,
-      ResultURL: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mpesa/b2c/result`,
-      Occasion: remarks,
-    }),
-  })
+  const response = await fetch(
+    `${getBaseUrl(credentials.environment)}/mpesa/b2c/v1/paymentrequest`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        InitiatorName: credentials.initiatorName,
+        SecurityCredential: credentials.securityCredential,
+        CommandID: 'BusinessPayment',
+        Amount: Math.ceil(amount),
+        PartyA: credentials.shortcode,
+        PartyB: phone.replace(/^0/, '254').replace(/^\+/, ''),
+        Remarks: remarks,
+        QueueTimeOutURL: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mpesa/b2c/timeout`,
+        ResultURL: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mpesa/b2c/result`,
+        Occasion: remarks,
+      }),
+    }
+  )
 
   return response.json()
 }

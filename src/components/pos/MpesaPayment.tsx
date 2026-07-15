@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import { Smartphone, CheckCircle2, XCircle, Loader2, RefreshCw } from 'lucide-react'
-import toast from 'react-hot-toast'
 
 interface Props {
   amount: number
+  tenantId: string
   customerPhone?: string
   onSuccess: () => void
   onCancel: () => void
@@ -14,18 +14,16 @@ interface Props {
 
 type Step = 'phone' | 'waiting' | 'success' | 'failed'
 
-export default function MpesaPayment({ amount, customerPhone, onSuccess, onCancel }: Props) {
+export default function MpesaPayment({ amount, tenantId, customerPhone, onSuccess, onCancel }: Props) {
   const [phone, setPhone] = useState(customerPhone ?? '')
   const [step, setStep] = useState<Step>('phone')
-  const [checkoutId, setCheckoutId] = useState<string | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [pollCount, setPollCount] = useState(0)
 
   function formatPhone(value: string): string {
     const digits = value.replace(/\D/g, '')
-    if (digits.startsWith('0')) return '254' + digits.slice(1)
     if (digits.startsWith('254')) return digits
-    if (digits.startsWith('+254')) return digits.slice(1)
+    if (digits.startsWith('0')) return '254' + digits.slice(1)
     return '254' + digits
   }
 
@@ -38,47 +36,57 @@ export default function MpesaPayment({ amount, customerPhone, onSuccess, onCance
     setStep('waiting')
     setErrorMsg(null)
 
-    const resp = await fetch('/api/mpesa/stk-push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: formatted, amount: Math.ceil(amount) }),
-    })
-    const data = await resp.json()
+    try {
+      const resp = await fetch('/api/mpesa/stk-push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: formatted, amount: Math.ceil(amount), tenantId }),
+      })
+      const data = await resp.json()
 
-    if (!resp.ok || data.error) {
-      setErrorMsg(data.error ?? 'STK Push failed')
-      setStep('phone')
-      return
+      if (!resp.ok) {
+        setErrorMsg(data.message ?? 'STK Push failed')
+        setStep('failed')
+        return
+      }
+
+      const cid = data.checkoutRequestId
+      pollStatus(cid, 0)
+    } catch {
+      setErrorMsg('Network error. Please try again.')
+      setStep('failed')
     }
-
-    const cid = data.CheckoutRequestID ?? data.checkoutRequestId
-    setCheckoutId(cid)
-    pollStatus(cid, 0)
   }
 
   async function pollStatus(id: string, count: number) {
-    if (count > 18) {
+    if (count > 36) {
       setStep('failed')
-      setErrorMsg('Payment timed out. Please try again.')
+      setErrorMsg('Payment timed out after 3 minutes. Please try again.')
       return
     }
-    await new Promise((r) => setTimeout(r, 5000))
 
-    const resp = await fetch('/api/mpesa/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ checkoutRequestId: id }),
-    })
-    const data = await resp.json()
+    await new Promise((r) => setTimeout(r, 5000))
     setPollCount(count + 1)
 
-    if (data.status === 'completed') {
-      setStep('success')
-      setTimeout(onSuccess, 1500)
-    } else if (data.status === 'failed' || data.status === 'cancelled') {
-      setStep('failed')
-      setErrorMsg(data.message ?? 'Payment was not completed')
-    } else {
+    try {
+      const resp = await fetch('/api/mpesa/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkoutRequestId: id, tenantId }),
+      })
+      const data = await resp.json()
+
+      if (data.status === 'completed') {
+        setStep('success')
+        setTimeout(onSuccess, 1500)
+      } else if (data.status === 'failed' || data.status === 'cancelled') {
+        setStep('failed')
+        setErrorMsg(data.message ?? 'Payment was not completed')
+      } else {
+        // still pending — keep polling
+        pollStatus(id, count + 1)
+      }
+    } catch {
       pollStatus(id, count + 1)
     }
   }

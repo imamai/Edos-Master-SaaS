@@ -9,7 +9,7 @@ import { X, Loader2 } from 'lucide-react'
 interface Category { id: string; name: string }
 interface Product {
   id: string; name: string; sku: string | null; barcode: string | null
-  category_id: string | null; unit: string; buying_price: number
+  category_id: string | null; unit: string; cost_price: number
   selling_price: number; vat_rate: number; reorder_level: number
   description: string | null; has_serial?: boolean; has_warranty?: boolean; warranty_months?: number
 }
@@ -44,7 +44,7 @@ export default function ProductFormModal({ product, categories, tenantId, branch
     description: product?.description ?? '',
     category_id: product?.category_id ?? '',
     unit: product?.unit ?? 'piece',
-    buying_price: product?.buying_price ?? 0,
+    cost_price: product?.cost_price ?? 0,
     selling_price: product?.selling_price ?? 0,
     vat_rate: product?.vat_rate ?? 16,
     reorder_level: product?.reorder_level ?? 5,
@@ -68,10 +68,12 @@ export default function ProductFormModal({ product, categories, tenantId, branch
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = supabase as any
     const payload = {
       ...form,
       tenant_id: tenantId,
-      buying_price: Number(form.buying_price),
+      cost_price: Number(form.cost_price),
       selling_price: Number(form.selling_price),
       vat_rate: Number(form.vat_rate),
       reorder_level: Number(form.reorder_level),
@@ -80,14 +82,14 @@ export default function ProductFormModal({ product, categories, tenantId, branch
 
     let error
     if (product) {
-      ;({ error } = await supabase.from('products').update(payload).eq('id', product.id))
+      ;({ error } = await db.from('products').update(payload).eq('id', product.id))
     } else {
-      const { data: newProd, error: insertErr } = await supabase.from('products').insert(payload).select().single()
+      const { data: newProd, error: insertErr } = await db.from('products').insert(payload).select().single()
       error = insertErr
       if (!insertErr && newProd) {
-        const bid = branchId ?? (await supabase.from('branches').select('id').eq('tenant_id', tenantId).eq('is_main', true).single()).data?.id
+        const bid = branchId ?? (await db.from('branches').select('id').eq('tenant_id', tenantId).eq('is_main', true).single()).data?.id
         if (bid) {
-          await supabase.from('inventory').insert({ product_id: newProd.id, branch_id: bid, quantity: 0 })
+          await db.from('inventory').insert({ tenant_id: tenantId, product_id: newProd.id, branch_id: bid, quantity: 0 })
         }
       }
     }
@@ -132,7 +134,7 @@ export default function ProductFormModal({ product, categories, tenantId, branch
               <input type="number" min={0} value={form.reorder_level} onChange={(e) => update('reorder_level', e.target.value)} className={ic} />
             </Field>
             <Field label="Buying Price (KES) *">
-              <input required type="number" min={0} step={0.01} value={form.buying_price} onChange={(e) => update('buying_price', e.target.value)} className={ic} />
+              <input required type="number" min={0} step={0.01} value={form.cost_price} onChange={(e) => update('cost_price', e.target.value)} className={ic} />
             </Field>
             <Field label="Selling Price (KES) *">
               <input required type="number" min={0} step={0.01} value={form.selling_price} onChange={(e) => update('selling_price', e.target.value)} className={ic} />

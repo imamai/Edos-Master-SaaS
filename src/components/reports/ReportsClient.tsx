@@ -61,7 +61,7 @@ export default function ReportsClient() {
     if (tab === 'sales') {
       const [salesRes, expRes] = await Promise.all([
         supabase.from('sales')
-          .select('total_amount, tax_amount, payment_method, created_at, sale_items(quantity, products(buying_price))')
+          .select('total_amount, tax_amount, payment_method, created_at, sale_items(quantity, products(cost_price))')
           .eq('tenant_id', tenantId).eq('status', 'completed')
           .gte('created_at', from).lte('created_at', to).order('created_at'),
         supabase.from('expenses')
@@ -78,11 +78,11 @@ export default function ReportsClient() {
 
       // Aggregate sales by date
       const byDate = new Map<string, SaleSummary>()
-      ;(salesRes.data as { created_at: string; total_amount: number; tax_amount: number; payment_method: string; sale_items: { quantity: number; products: { buying_price: number } | null }[] }[] ?? []).forEach((s) => {
+      ;(salesRes.data as { created_at: string; total_amount: number; tax_amount: number; payment_method: string; sale_items: { quantity: number; products: { cost_price: number } | null }[] }[] ?? []).forEach((s) => {
         const d = s.created_at.split('T')[0]
         if (!byDate.has(d)) byDate.set(d, { date: d, revenue: 0, transactions: 0, cash: 0, mpesa: 0, credit: 0, card: 0, grossProfit: 0, expenses: 0, netProfit: 0 })
         const entry = byDate.get(d)!
-        const cogs = (s.sale_items ?? []).reduce((sum, item) => sum + (item.products?.buying_price ?? 0) * Number(item.quantity), 0)
+        const cogs = (s.sale_items ?? []).reduce((sum, item) => sum + (item.products?.cost_price ?? 0) * Number(item.quantity), 0)
         entry.revenue += s.total_amount
         entry.transactions += 1
         entry.grossProfit += (s.total_amount - s.tax_amount) - cogs
@@ -112,18 +112,18 @@ export default function ReportsClient() {
 
     if (tab === 'products') {
       const { data } = await supabase.from('sales')
-        .select('sale_items(quantity, total_price, products(name, buying_price, categories(name)))')
+        .select('sale_items(quantity, total_price, products(name, cost_price, categories(name)))')
         .eq('tenant_id', tenantId).eq('status', 'completed')
         .gte('created_at', from).lte('created_at', to)
       const map = new Map<string, { name: string; revenue: number; qty: number; category: string; cost: number; profit: number }>()
-      ;(data as { sale_items: { quantity: number; total_price: number; products: { name: string; buying_price: number; categories: { name: string } | null } | null }[] }[] ?? []).forEach((sale) => {
+      ;(data as { sale_items: { quantity: number; total_price: number; products: { name: string; cost_price: number; categories: { name: string } | null } | null }[] }[] ?? []).forEach((sale) => {
         const items = sale.sale_items ?? []
         items.forEach((item) => {
           const prod = item.products
           const key = prod?.name ?? 'Unknown'
           if (!map.has(key)) map.set(key, { name: key, revenue: 0, qty: 0, category: prod?.categories?.name ?? '', cost: 0, profit: 0 })
           const e = map.get(key)!
-          const itemCost = (prod?.buying_price ?? 0) * Number(item.quantity)
+          const itemCost = (prod?.cost_price ?? 0) * Number(item.quantity)
           e.revenue += item.total_price
           e.qty += Number(item.quantity)
           e.cost += itemCost

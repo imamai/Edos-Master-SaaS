@@ -1,0 +1,1948 @@
+[
+  {
+    "id": "TC001",
+    "title": "Complete a cash sale from the POS terminal",
+    "description": "A cashier can search for products, build a cart, complete a cash payment, and see a receipt confirmation.",
+    "category": "POS Terminal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant"
+      },
+      {
+        "type": "action",
+        "description": "Search for a product"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "action",
+        "description": "Complete the cash payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a receipt confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the completed sale is recorded"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Log in and reach the tenant dashboard",
+    "description": "A tenant or admin user can sign in with valid credentials and land on the tenant dashboard.",
+    "category": "User Login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the sign-in form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant dashboard is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Edit cart quantity and apply a discount before payment",
+    "description": "A cashier can adjust quantities and apply a discount before completing a sale so the final cart reflects the changes.",
+    "category": "POS Terminal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant"
+      },
+      {
+        "type": "action",
+        "description": "Search for a product"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "action",
+        "description": "Increase the item quantity"
+      },
+      {
+        "type": "action",
+        "description": "Apply a discount"
+      },
+      {
+        "type": "action",
+        "description": "Complete the cash payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the receipt confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sale total reflects the cart changes"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Build and confirm an M-Pesa sale on the POS terminal",
+    "description": "A cashier can start an M-Pesa STK Push payment from the POS and see a successful receipt after confirmation on the phone.",
+    "category": "POS Terminal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant"
+      },
+      {
+        "type": "action",
+        "description": "Search for a product"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "action",
+        "description": "Select M-Pesa as the payment method"
+      },
+      {
+        "type": "action",
+        "description": "Enter the customer phone number"
+      },
+      {
+        "type": "action",
+        "description": "Send the STK Push payment request"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the payment on the phone"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a receipt confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sale is marked as paid"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Assign a customer to a sale before checkout",
+    "description": "A cashier can search for a customer, assign them to the current sale, and complete checkout with the customer linked to the receipt.",
+    "category": "POS Terminal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant"
+      },
+      {
+        "type": "action",
+        "description": "Search for a product"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer"
+      },
+      {
+        "type": "action",
+        "description": "Assign the customer to the sale"
+      },
+      {
+        "type": "action",
+        "description": "Complete the cash payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a receipt confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the assigned customer is included in the sale"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Add a new product to inventory",
+    "description": "A manager can create a product in inventory and see it appear in the product list.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/inventory"
+      },
+      {
+        "type": "action",
+        "description": "Create a new product with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Save the product"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new product appears in the inventory list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "View dashboard KPIs and low-stock alerts",
+    "description": "A manager can open the dashboard and see business performance indicators together with any low-stock alerts.",
+    "category": "Tenant Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify KPI metrics are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify low-stock alerts are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Review pending invoices and submit one to KRA",
+    "description": "A tenant user can open eTIMS, submit a pending invoice, and see it move to a submitted state with an eTIMS invoice number.",
+    "category": "eTIMS KRA Compliance",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/etims"
+      },
+      {
+        "type": "action",
+        "description": "Select a pending invoice"
+      },
+      {
+        "type": "action",
+        "description": "Submit the invoice to KRA"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the invoice is marked as submitted"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an eTIMS invoice number is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Register a new tenant account",
+    "description": "A new business can submit registration details and see confirmation that email verification has been sent.",
+    "category": "Tenant Registration",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /register"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the business name field with Acme Retail"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the subdomain field with acme-retail"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the owner email field with owner@example.com"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with a valid password"
+      },
+      {
+        "type": "action",
+        "description": "Select a subscription plan"
+      },
+      {
+        "type": "action",
+        "description": "Submit the registration form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a registration confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an email verification message is visible"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Suspend a tenant account",
+    "description": "A super admin can suspend an active tenant from the tenant detail view and see the status update.",
+    "category": "Admin Tenant Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/tenants"
+      },
+      {
+        "type": "action",
+        "description": "Open a tenant record"
+      },
+      {
+        "type": "action",
+        "description": "Suspend the tenant"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant status is updated to suspended"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant remains visible in the detail view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Find products and add a new inventory item",
+    "description": "Verifies a manager can search and filter inventory, create a product, and see it added to the list.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the inventory navigation link"
+      },
+      {
+        "type": "action",
+        "description": "Search for a product by name or SKU"
+      },
+      {
+        "type": "action",
+        "description": "Filter inventory by category or stock status"
+      },
+      {
+        "type": "action",
+        "description": "Open the add product form"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the product name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the product SKU"
+      },
+      {
+        "type": "action",
+        "description": "Select a product category"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the product price"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the opening stock quantity"
+      },
+      {
+        "type": "action",
+        "description": "Save the product"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new product appears in the inventory list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the inventory filters remain available"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "View tenant revenue overview",
+    "description": "A manager can open the dashboard and see the main business KPIs, trend chart, low-stock alerts, and recent sales needed for day-to-day monitoring.",
+    "category": "Dashboard",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the dashboard link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the dashboard KPIs are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify low-stock alerts and recent sales are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Start a subscription upgrade from billing settings",
+    "description": "A tenant owner can begin a billing upgrade flow from settings and reach the checkout step.",
+    "category": "Tenant Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/settings"
+      },
+      {
+        "type": "action",
+        "description": "Open the billing section"
+      },
+      {
+        "type": "action",
+        "description": "Choose a subscription upgrade"
+      },
+      {
+        "type": "action",
+        "description": "Continue to checkout"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the checkout step is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC014",
+    "title": "Activate a suspended tenant account",
+    "description": "A super admin can activate a suspended tenant from the tenant detail view and see the status update.",
+    "category": "Admin Tenant Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/tenants"
+      },
+      {
+        "type": "action",
+        "description": "Open a suspended tenant record"
+      },
+      {
+        "type": "action",
+        "description": "Activate the tenant"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant status is updated to active"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant remains visible in the detail view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC015",
+    "title": "Edit an existing product in inventory",
+    "description": "A manager can update an existing product and see the changes reflected in the inventory list.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/inventory"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing product for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the product details"
+      },
+      {
+        "type": "action",
+        "description": "Save the product changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated product appears in the inventory list"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC016",
+    "title": "Update an existing inventory product",
+    "description": "Verifies a manager can open an existing product, edit its details, and see the updated information reflected in inventory.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the inventory navigation link"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing product for editing"
+      },
+      {
+        "type": "action",
+        "description": "Update the product name or pricing details"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated product information is shown"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the product remains listed in inventory"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC017",
+    "title": "Save eTIMS settings successfully",
+    "description": "A tenant owner can update eTIMS device and branch details and see the saved configuration reflected on the settings page.",
+    "category": "eTIMS KRA Compliance",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/etims/settings"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the device serial field with a valid serial number"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the business PIN field with a valid PIN"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the branch details field with valid branch information"
+      },
+      {
+        "type": "action",
+        "description": "Save the eTIMS settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated eTIMS configuration is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC018",
+    "title": "Submit an invoice to eTIMS",
+    "description": "A tenant user can submit an invoice through eTIMS and see the submission status in the compliance dashboard.",
+    "category": "eTIMS",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the eTIMS link"
+      },
+      {
+        "type": "action",
+        "description": "Submit an invoice for compliance processing"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the invoice submission status is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC019",
+    "title": "Hold and resume an in-progress sale",
+    "description": "A cashier can hold an in-progress cart, resume it later, and complete the payment without losing the items.",
+    "category": "POS Terminal",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant"
+      },
+      {
+        "type": "action",
+        "description": "Search for a product"
+      },
+      {
+        "type": "action",
+        "description": "Add the product to the cart"
+      },
+      {
+        "type": "action",
+        "description": "Hold the current sale"
+      },
+      {
+        "type": "action",
+        "description": "Open held sales"
+      },
+      {
+        "type": "action",
+        "description": "Resume the held sale"
+      },
+      {
+        "type": "action",
+        "description": "Complete the cash payment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the receipt confirmation is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the held sale items are preserved"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC020",
+    "title": "Adjust stock levels for a product",
+    "description": "A manager can record a stock adjustment and see the product stock level update in inventory.",
+    "category": "Inventory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the inventory link"
+      },
+      {
+        "type": "action",
+        "description": "Open a product stock adjustment"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid stock adjustment amount"
+      },
+      {
+        "type": "action",
+        "description": "Save the stock adjustment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the stock level is updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC021",
+    "title": "Change a tenant plan",
+    "description": "A super admin can change a tenant subscription plan and see the updated plan reflected in tenant details.",
+    "category": "Admin Tenant Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/tenants"
+      },
+      {
+        "type": "action",
+        "description": "Open a tenant record"
+      },
+      {
+        "type": "action",
+        "description": "Change the tenant plan to a different available plan"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant plan is updated"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated plan is visible in the tenant detail view"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC022",
+    "title": "Inspect sales performance trends",
+    "description": "A manager can open the reports page, choose a date range, and see revenue, product, payment, and tax summaries for the selected period.",
+    "category": "Reports",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the reports link"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date range for the report period"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify revenue summary and trend charts are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify product performance, payment breakdown, and tax summary are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC023",
+    "title": "Upgrade billing with card payment",
+    "description": "A tenant owner can choose a billing upgrade and complete checkout through Stripe, then return to the app with an updated billing state.",
+    "category": "Billing & Subscription",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/settings"
+      },
+      {
+        "type": "action",
+        "description": "Choose an upgrade plan"
+      },
+      {
+        "type": "action",
+        "description": "Continue to card checkout"
+      },
+      {
+        "type": "action",
+        "description": "Complete the checkout flow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the billing status reflects the upgraded plan"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the subscription state is updated"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC024",
+    "title": "Upgrade billing subscription with Stripe",
+    "description": "A tenant owner can start a billing upgrade and reach the Stripe checkout experience from tenant settings.",
+    "category": "Billing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the settings link"
+      },
+      {
+        "type": "action",
+        "description": "Start the subscription upgrade"
+      },
+      {
+        "type": "action",
+        "description": "Choose Stripe as the payment method"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the Stripe checkout experience is opened"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC025",
+    "title": "Record a stock adjustment for a product",
+    "description": "A manager can adjust product stock and see the updated stock level in inventory.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/inventory"
+      },
+      {
+        "type": "action",
+        "description": "Open a product for stock adjustment"
+      },
+      {
+        "type": "action",
+        "description": "Enter a valid stock adjustment value"
+      },
+      {
+        "type": "action",
+        "description": "Save the stock adjustment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated stock level is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC026",
+    "title": "Update product details",
+    "description": "A manager can edit an existing product and see the updated details saved in inventory.",
+    "category": "Inventory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the inventory link"
+      },
+      {
+        "type": "action",
+        "description": "Open an existing product for editing"
+      },
+      {
+        "type": "action",
+        "description": "Change the product details"
+      },
+      {
+        "type": "action",
+        "description": "Save the changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated product details are shown"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC027",
+    "title": "Pay for a subscription with M-Pesa",
+    "description": "A tenant owner can start a billing payment with M-Pesa and see the M-Pesa payment flow begin from tenant settings.",
+    "category": "Billing",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the settings link"
+      },
+      {
+        "type": "action",
+        "description": "Start the subscription payment"
+      },
+      {
+        "type": "action",
+        "description": "Choose M-Pesa as the payment method"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the M-Pesa payment flow is started"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC028",
+    "title": "View sales history and open a receipt",
+    "description": "A user can browse sales history and open a receipt from a completed sale.",
+    "category": "Sales History",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/sales"
+      },
+      {
+        "type": "action",
+        "description": "Open a sale from the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the receipt details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC029",
+    "title": "Review completed sales list",
+    "description": "A cashier or manager can open sales history and see completed transactions with filters for finding past sales.",
+    "category": "Sales History",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the sales history link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the sales list is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify date filters and search controls are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC030",
+    "title": "Search and open a tenant record",
+    "description": "A super admin can search the tenant list and open a tenant detail view to review account information.",
+    "category": "Admin Tenant Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/tenants"
+      },
+      {
+        "type": "action",
+        "description": "Search for a tenant using a unique name"
+      },
+      {
+        "type": "action",
+        "description": "Open the matching tenant record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant detail view is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tenant account information is visible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC031",
+    "title": "Save eTIMS integration settings",
+    "description": "A user can enter eTIMS device and branch settings, save them, and see the updated configuration persisted on the page.",
+    "category": "eTIMS Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/etims/settings"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the eTIMS integration settings with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Save the settings"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the saved eTIMS settings are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC032",
+    "title": "Invite a staff member",
+    "description": "A tenant owner can send a staff invitation and see the invite listed in tenant settings.",
+    "category": "Tenant Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the settings link"
+      },
+      {
+        "type": "action",
+        "description": "Start inviting a staff member"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the staff invitation details with valid values"
+      },
+      {
+        "type": "action",
+        "description": "Send the invitation"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the staff invitation is listed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC033",
+    "title": "Invite a staff member and assign a role",
+    "description": "A tenant owner can send a staff invitation and see the invited user listed with the assigned role.",
+    "category": "Tenant Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/settings"
+      },
+      {
+        "type": "action",
+        "description": "Open the staff invitations section"
+      },
+      {
+        "type": "action",
+        "description": "Invite a staff member with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Assign a role"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the staff invitation is listed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the assigned role is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC034",
+    "title": "Review tenant list in admin",
+    "description": "A super admin can open the tenant list and see searchable tenant records for platform management.",
+    "category": "Admin Tenants",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the tenant list link"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant list is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tenant search and filter controls are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC035",
+    "title": "Add an expense record",
+    "description": "A tenant user can create a new expense and see it appear in the expense list.",
+    "category": "Expense Tracking",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/expenses"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to add a new expense"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid expense category"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the expense amount with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the expense description field with a unique description"
+      },
+      {
+        "type": "action",
+        "description": "Save the expense"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new expense appears in the expense list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC036",
+    "title": "Review reports for sales and performance trends",
+    "description": "A manager can open reports and see sales and performance trends for the selected reporting period.",
+    "category": "Reports",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/reports"
+      },
+      {
+        "type": "action",
+        "description": "Select a reporting period"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sales trend data is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify performance summary data is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC037",
+    "title": "Create a purchase order and email it to a supplier",
+    "description": "A user can create a purchase order, send it to a supplier, and see the order status update.",
+    "category": "Procurement",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/procurement"
+      },
+      {
+        "type": "action",
+        "description": "Create a new purchase order with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Send the purchase order to the supplier"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the purchase order is created"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the purchase order status is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC038",
+    "title": "Add a new customer record",
+    "description": "Verifies a user can create a customer profile and see it appear in the customer directory.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the customers navigation link"
+      },
+      {
+        "type": "action",
+        "description": "Open the add customer form"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the customer name"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the customer phone number"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the customer email address"
+      },
+      {
+        "type": "action",
+        "description": "Save the customer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the new customer appears in the customer directory"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer directory remains accessible"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC039",
+    "title": "Export a business report",
+    "description": "A manager can export the current report view after selecting a period and receive a downloadable report file.",
+    "category": "Reports",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the reports link"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date range for the report period"
+      },
+      {
+        "type": "action",
+        "description": "Export the report"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a report file download is initiated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC040",
+    "title": "Create a purchase order",
+    "description": "A tenant user can create a purchase order with supplier, line items, and delivery date and see it listed as pending.",
+    "category": "Procurement (Purchase Orders)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/procurement"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to create a new purchase order"
+      },
+      {
+        "type": "action",
+        "description": "Select a supplier"
+      },
+      {
+        "type": "action",
+        "description": "Add a product to the purchase order"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the product quantity with a valid value"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid expected delivery date"
+      },
+      {
+        "type": "action",
+        "description": "Save the purchase order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the purchase order appears in the list as pending"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC041",
+    "title": "Inspect a tenant detail record",
+    "description": "A super admin can open a tenant from the list and review its plan, billing, and activity details.",
+    "category": "Admin Tenants",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the tenant list link"
+      },
+      {
+        "type": "action",
+        "description": "Open a tenant record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tenant status and plan details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify billing and activity details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC042",
+    "title": "Open the admin tenant list and inspect a tenant detail",
+    "description": "A super admin can search tenants, open a tenant detail page, and view its plan and billing information.",
+    "category": "Admin Tenant Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/tenants"
+      },
+      {
+        "type": "action",
+        "description": "Search for a tenant"
+      },
+      {
+        "type": "action",
+        "description": "Open the tenant detail view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify tenant status information is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify plan and billing details are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC043",
+    "title": "Filter inventory by category and stock level",
+    "description": "A manager can narrow inventory results using filters and see only the matching products.",
+    "category": "Inventory",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the inventory link"
+      },
+      {
+        "type": "action",
+        "description": "Apply inventory filters"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the filtered product list is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC044",
+    "title": "Filter tenants by status or plan",
+    "description": "A super admin can narrow the tenant list using filters and see only matching tenants.",
+    "category": "Admin Tenant Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /admin/tenants"
+      },
+      {
+        "type": "action",
+        "description": "Apply a tenant status filter"
+      },
+      {
+        "type": "action",
+        "description": "Apply a plan filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant list reflects the selected filters"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify only matching tenants are shown"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC045",
+    "title": "Suspend or activate a tenant",
+    "description": "A super admin can change a tenant's status from the tenant detail page and see the updated status reflected.",
+    "category": "Admin Tenants",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the tenant list link"
+      },
+      {
+        "type": "action",
+        "description": "Open a tenant record"
+      },
+      {
+        "type": "action",
+        "description": "Change the tenant status"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant status is updated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC046",
+    "title": "Filter the inventory list by product criteria",
+    "description": "A manager can filter inventory to find matching products and see the filtered results only.",
+    "category": "Inventory Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tenant/inventory"
+      },
+      {
+        "type": "action",
+        "description": "Apply an inventory filter"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify matching products are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify non-matching products are hidden"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC047",
+    "title": "Search customers and view purchase history",
+    "description": "Verifies a user can search for a customer, open their record, and review purchase history and total spend.",
+    "category": "Customer Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the customers navigation link"
+      },
+      {
+        "type": "action",
+        "description": "Search for a customer by name or phone"
+      },
+      {
+        "type": "action",
+        "description": "Open the customer record"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer purchase history is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the customer total spend is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC048",
+    "title": "Find a sale by receipt or customer",
+    "description": "A cashier or manager can search sales history by receipt number or customer and see the matching sale results.",
+    "category": "Sales History",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the sales history link"
+      },
+      {
+        "type": "action",
+        "description": "Search sales by receipt number or customer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify matching sale results are displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC049",
+    "title": "Suspend and reactivate a tenant from the admin detail view",
+    "description": "A super admin can suspend a tenant and then reactivate it from the tenant detail page.",
+    "category": "Admin Tenant Management",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /admin/tenants"
+      },
+      {
+        "type": "action",
+        "description": "Search for a tenant"
+      },
+      {
+        "type": "action",
+        "description": "Open the tenant detail view"
+      },
+      {
+        "type": "action",
+        "description": "Suspend the tenant"
+      },
+      {
+        "type": "action",
+        "description": "Reactivate the tenant"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the tenant status is active again"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC050",
+    "title": "Open sale details and receipt",
+    "description": "A cashier or manager can open a completed sale and view its details together with the receipt.",
+    "category": "Sales History",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the email field with {{LOGIN_USER}}"
+      },
+      {
+        "type": "action",
+        "description": "Fill in the password field with {{LOGIN_PASSWORD}}"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the sales history link"
+      },
+      {
+        "type": "action",
+        "description": "Open a completed sale"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify sale details are displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the receipt is displayed"
+      }
+    ],
+    "priority": "Medium"
+  }
+]

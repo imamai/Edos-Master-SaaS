@@ -119,6 +119,7 @@ export default function PaymentModal({ total, subtotal, discountAmount, taxAmoun
       <ModalWrapper onClose={() => setStep('method')}>
         <MpesaPayment
           amount={total}
+          tenantId={tenantId}
           customerPhone={customer?.phone}
           onSuccess={() => completeSale('mpesa', [{ method: 'mpesa', amount: total }])}
           onCancel={() => setStep('method')}
