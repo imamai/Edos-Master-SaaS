@@ -1,15 +1,40 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { formatCurrency } from '@/lib/utils'
 import { Printer, X, Download, FileText } from 'lucide-react'
-import type { CartItem, CartCustomer } from '@/store/cart'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
+export interface QuotationLineItem {
+  productId?: string
+  name: string
+  sku?: string
+  unit: string
+  quantity: number
+  unit_price: number
+  discount_amount?: number
+  tax_amount?: number
+  total_price: number
+}
+
+interface SaveContext {
+  tenantId: string
+  branchId: string | null
+  cashierId: string
+  customerId?: string | null
+}
+
+interface ExistingQuotation {
+  quoteNumber: string
+  createdAt: string
+  validUntil: string
+}
+
 interface Props {
-  items: CartItem[]
-  customer: CartCustomer | null
+  items: QuotationLineItem[]
+  customer: { name: string; phone?: string } | null
   subtotal: number
   discountAmount: number
   taxAmount: number
@@ -20,6 +45,12 @@ interface Props {
   tenantKraPIN?: string
   quotationNotes?: string
   onClose: () => void
+  /** Present when generating a brand-new quotation — saves it to the
+   *  database once on open. Omit when reopening an already-saved one. */
+  saveContext?: SaveContext
+  /** Present when reopening a previously-saved quotation — uses its real
+   *  quote number/dates instead of generating new ones, and skips saving. */
+  existing?: ExistingQuotation
 }
 
 function generateQuoteNumber() {
@@ -29,17 +60,76 @@ function generateQuoteNumber() {
   return `QT-${date}-${seq}`
 }
 
-function validUntil() {
-  const d = new Date()
-  d.setDate(d.getDate() + 7)
-  return d.toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })
+function addDays(base: Date, days: number) {
+  const d = new Date(base)
+  d.setDate(d.getDate() + days)
+  return d
 }
 
-export default function QuotationModal({ items, customer, subtotal, discountAmount, taxAmount, total, tenantName, tenantAddress, tenantPhone, tenantKraPIN, quotationNotes, onClose }: Props) {
+const dateLabel = (d: Date) => d.toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })
+
+export default function QuotationModal({ items, customer, subtotal, discountAmount, taxAmount, total, tenantName, tenantAddress, tenantPhone, tenantKraPIN, quotationNotes, onClose, saveContext, existing }: Props) {
   const printRef = useRef<HTMLDivElement>(null)
-  const quoteNumber = useRef(generateQuoteNumber()).current
-  const validity = useRef(validUntil()).current
-  const today = new Date().toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })
+  const savedRef = useRef(false)
+  const [saveFailed, setSaveFailed] = useState(false)
+
+  const quoteNumber = useRef(existing?.quoteNumber ?? generateQuoteNumber()).current
+  const createdAt = useRef(existing ? new Date(existing.createdAt) : new Date()).current
+  const validUntilDate = useRef(existing ? new Date(existing.validUntil) : addDays(createdAt, 7)).current
+  const today = dateLabel(createdAt)
+  const validity = dateLabel(validUntilDate)
+
+  useEffect(() => {
+    if (!saveContext || existing || savedRef.current) return
+    savedRef.current = true
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const db = supabase as any
+        const { data: quote, error } = await db
+          .from('quotations')
+          .insert({
+            tenant_id: saveContext.tenantId,
+            branch_id: saveContext.branchId,
+            created_by: saveContext.cashierId,
+            customer_id: saveContext.customerId ?? null,
+            quote_number: quoteNumber,
+            valid_until: validUntilDate.toISOString().slice(0, 10),
+            subtotal,
+            discount_amount: discountAmount,
+            tax_amount: taxAmount,
+            total_amount: total,
+            notes: quotationNotes || null,
+          })
+          .select('id')
+          .single()
+
+        if (error || !quote) { setSaveFailed(true); return }
+
+        if (items.length > 0) {
+          const { error: itemsErr } = await db.from('quotation_items').insert(
+            items.map((i) => ({
+              quotation_id: quote.id,
+              product_id: i.productId ?? null,
+              item_name: i.name,
+              item_sku: i.sku ?? null,
+              quantity: i.quantity,
+              unit_price: i.unit_price,
+              discount_amount: i.discount_amount ?? 0,
+              tax_amount: i.tax_amount ?? 0,
+              total_price: i.total_price,
+            }))
+          )
+          if (itemsErr) setSaveFailed(true)
+        }
+      } catch {
+        setSaveFailed(true)
+      }
+    })()
+    // Save exactly once, on open — not on every prop change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function handlePrint() {
     const content = printRef.current?.innerHTML
@@ -119,8 +209,8 @@ export default function QuotationModal({ items, customer, subtotal, discountAmou
       head: [['#', 'Description', 'Qty', 'Unit Price', 'Amount']],
       body: items.map((item, i) => [
         String(i + 1),
-        item.product.name,
-        `${item.quantity} ${item.product.unit}`.trim(),
+        item.name,
+        `${item.quantity} ${item.unit}`.trim(),
         formatCurrency(item.unit_price),
         formatCurrency(item.total_price),
       ]),
@@ -176,11 +266,14 @@ export default function QuotationModal({ items, customer, subtotal, discountAmou
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 flex-shrink-0">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col transition-colors">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-blue-600" />
-            <span className="font-semibold text-slate-800">Quotation</span>
+            <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span className="font-semibold text-slate-800 dark:text-white">Quotation</span>
+            {saveFailed && (
+              <span className="text-xs text-amber-600 dark:text-amber-400">— couldn&apos;t save to history, but you can still download/print</span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handleDownloadPDF} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition">
@@ -189,8 +282,8 @@ export default function QuotationModal({ items, customer, subtotal, discountAmou
             <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
               <Printer className="w-4 h-4" /> Print
             </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 transition">
-              <X className="w-4 h-4 text-slate-400" />
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              <X className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             </button>
           </div>
         </div>
@@ -242,10 +335,10 @@ export default function QuotationModal({ items, customer, subtotal, discountAmou
               </thead>
               <tbody>
                 {items.map((item, i) => (
-                  <tr key={item.product.id} className={i % 2 === 1 ? 'bg-slate-50' : ''}>
+                  <tr key={item.productId ?? i} className={i % 2 === 1 ? 'bg-slate-50' : ''}>
                     <td className="px-3 py-2.5 text-slate-500">{i + 1}</td>
-                    <td className="px-3 py-2.5 font-medium">{item.product.name}</td>
-                    <td className="px-3 py-2.5 text-center">{item.quantity} {item.product.unit}</td>
+                    <td className="px-3 py-2.5 font-medium">{item.name}</td>
+                    <td className="px-3 py-2.5 text-center">{item.quantity} {item.unit}</td>
                     <td className="px-3 py-2.5 text-right">{formatCurrency(item.unit_price)}</td>
                     <td className="px-3 py-2.5 text-right font-medium">{formatCurrency(item.total_price)}</td>
                   </tr>

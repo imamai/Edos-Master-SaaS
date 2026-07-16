@@ -8,13 +8,68 @@ import {
   Truck, BookOpen, ShoppingBag, PackageCheck,
   Plus, Search, Edit2, X, Loader2, Send, CheckCircle,
   ChevronDown, Trash2, Phone, Mail, Star, AlertTriangle,
-  FileText, Package
+  FileText, Package, Download, Printer
 } from 'lucide-react'
 import { useTenantId } from '@/lib/hooks/useTenantId'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import type {
   Supplier, SupplierCatalog, PurchaseOrder,
   PurchaseOrderItem, GoodsReceivedNote, GRNItem, Product
 } from '@/types'
+
+interface TenantBranding {
+  name: string
+  phone?: string
+  address?: string
+  kraPIN?: string
+}
+
+function useTenantBranding(): TenantBranding | null {
+  const tenantId = useTenantId()
+  const [branding, setBranding] = useState<TenantBranding | null>(null)
+  useEffect(() => {
+    if (!tenantId) return
+    const supabase = createClient()
+    supabase.from('tenants').select('name, phone, metadata').eq('id', tenantId).single()
+      .then(({ data }) => {
+        if (!data) return
+        const meta = (data.metadata ?? {}) as Record<string, string>
+        setBranding({ name: data.name, phone: data.phone ?? undefined, address: meta.address || undefined, kraPIN: meta.kra_pin || undefined })
+      })
+  }, [tenantId])
+  return branding
+}
+
+const PDF_BLUE: [number, number, number] = [30, 64, 175]
+const PDF_GRAY: [number, number, number] = [100, 116, 139]
+const PDF_DARK: [number, number, number] = [30, 41, 59]
+
+function printDocument(title: string, headHtml: string, bodyHtml: string) {
+  const win = window.open('', '_blank', 'width=900,height=1200')
+  win?.document.write(`<html><head><title>${title}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:Arial,sans-serif;font-size:13px;color:#1e293b;padding:40px 20px;background:white;line-height:1.5}
+    .flex{display:flex}.justify-between{justify-content:space-between}
+    .text-right{text-align:right}
+    .mb-6{margin-bottom:1.5rem}.mb-4{margin-bottom:1rem}.mb-2{margin-bottom:.5rem}
+    .text-2xl{font-size:22px}.text-xs{font-size:11px}
+    .font-bold{font-weight:700}.font-semibold{font-weight:600}
+    .text-blue-700{color:#1e40af}.text-slate-500{color:#64748b}.text-slate-800{color:#1e293b}
+    hr{border:none;border-top:1px solid #e2e8f0;margin:1.5rem 0}
+    table{width:100%;border-collapse:collapse;margin-bottom:1.5rem}
+    th{padding:10px 12px;font-size:12px;font-weight:600;text-align:left;background:#1e40af;color:white;border:1px solid #1e40af}
+    th:last-child{text-align:right}
+    td{padding:10px 12px;font-size:13px;border-bottom:1px solid #f1f5f9}
+    td:last-child{text-align:right}
+    tbody tr:nth-child(even){background:#f8fafc}
+    .totals{width:16rem;margin-left:auto}
+    .totals div{display:flex;justify-content:space-between;margin-bottom:4px}
+    @media print{body{padding:20px}}
+  </style></head><body>${headHtml}<hr/>${bodyHtml}</body></html>`)
+  win?.document.close()
+  setTimeout(() => { win?.print(); win?.close() }, 250)
+}
 
 type Tab = 'suppliers' | 'catalog' | 'orders' | 'grn'
 
@@ -343,7 +398,7 @@ function PurchaseOrdersTab() {
     if (!tenantId) return
     setLoading(true)
     let q = supabase.from('purchase_orders')
-      .select('*, supplier:suppliers(name,email,phone)')
+      .select('*, supplier:suppliers(name,email,phone,address,city)')
       .eq('tenant_id', tenantId)
     if (statusFilter) q = q.eq('status', statusFilter)
     const { data } = await q.order('created_at', { ascending: false }).limit(100)
@@ -506,7 +561,7 @@ function GRNTab() {
     setLoading(true)
     const { data } = await supabase
       .from('goods_received_notes')
-      .select('*, supplier:suppliers(name), purchase_order:purchase_orders(po_number)')
+      .select('*, supplier:suppliers(name,email,phone,address,city), purchase_order:purchase_orders(po_number)')
       .eq('tenant_id', tenantId)
       .order('created_at', { ascending: false })
       .limit(100)
@@ -1076,6 +1131,7 @@ type POType = 'purchase_request' | 'rfq' | 'purchase_order'
 
 function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void }) {
   const supabase = createClient()
+  const branding = useTenantBranding()
   const [items, setItems] = useState<PurchaseOrderItem[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
@@ -1093,11 +1149,126 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
     else { toast.success(`Status updated to ${status}`); onClose() }
   }
 
-  const sup = po.supplier as { name?: string; email?: string; phone?: string } | undefined
+  const sup = po.supplier as { name?: string; email?: string; phone?: string; address?: string; city?: string } | undefined
+
+  function supplierBlockHtml() {
+    return `<div class="mb-6"><p class="text-xs font-bold text-slate-500" style="text-transform:uppercase;margin-bottom:8px">Supplier</p>
+      <p class="font-semibold text-slate-800">${sup?.name ?? '—'}</p>
+      ${sup?.address ? `<p class="text-slate-500 text-xs">${sup.address}${sup.city ? ', ' + sup.city : ''}</p>` : ''}
+      ${sup?.phone ? `<p class="text-slate-500 text-xs">Tel: ${sup.phone}</p>` : ''}
+      ${sup?.email ? `<p class="text-slate-500 text-xs">${sup.email}</p>` : ''}
+    </div>`
+  }
+
+  function itemRowsHtml() {
+    return items.map((it, i) => `<tr class="${i % 2 === 1 ? 'bg' : ''}">
+      <td>${it.product_name}</td>
+      <td>${it.quantity} ${it.unit}</td>
+      <td>${formatCurrency(it.unit_price)}</td>
+      <td>${formatCurrency(it.vat_amount)}</td>
+      <td>${formatCurrency(it.total)}</td>
+    </tr>`).join('')
+  }
+
+  function totalsHtml() {
+    return `<div class="totals">
+      <div><span class="text-slate-500">Subtotal</span><span>${formatCurrency(po.subtotal)}</span></div>
+      <div><span class="text-slate-500">VAT</span><span>${formatCurrency(po.vat_amount)}</span></div>
+      <div class="font-bold text-blue-700" style="border-top:1px solid #bfdbfe;padding-top:6px;margin-top:4px"><span>TOTAL</span><span>${formatCurrency(po.total_amount)}</span></div>
+    </div>`
+  }
+
+  function handlePrint() {
+    const headHtml = `<div class="flex justify-between mb-4">
+      <div><p class="text-2xl font-bold text-blue-700">${branding?.name ?? 'Store'}</p>
+        <div class="text-slate-500 text-xs" style="margin-top:4px">
+          ${branding?.address ? `<p>${branding.address}</p>` : ''}
+          ${branding?.phone ? `<p>Tel: ${branding.phone}</p>` : ''}
+          ${branding?.kraPIN ? `<p>KRA PIN: ${branding.kraPIN}</p>` : ''}
+        </div>
+      </div>
+      <div class="text-right">
+        <p class="text-2xl font-bold text-blue-700">PURCHASE ORDER</p>
+        <div class="text-slate-500 text-xs" style="margin-top:8px">
+          <p><span class="font-semibold text-slate-800">PO #:</span> ${po.po_number}</p>
+          <p><span class="font-semibold text-slate-800">Date:</span> ${new Date(po.created_at).toLocaleDateString('en-KE')}</p>
+          <p><span class="font-semibold text-slate-800">Status:</span> ${po.status}</p>
+        </div>
+      </div>
+    </div>`
+    const bodyHtml = `${supplierBlockHtml()}
+      <table><thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>VAT</th><th>Total</th></tr></thead>
+      <tbody>${itemRowsHtml()}</tbody></table>
+      ${totalsHtml()}
+      ${po.notes ? `<p class="text-xs text-slate-500 mb-2" style="margin-top:16px">Notes: ${po.notes}</p>` : ''}`
+    printDocument(`Purchase Order ${po.po_number}`, headHtml, bodyHtml)
+  }
+
+  function handleDownloadPDF() {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+    doc.setFontSize(20); doc.setTextColor(...PDF_BLUE); doc.setFont('helvetica', 'bold')
+    doc.text(branding?.name ?? 'Store', 15, 22)
+    doc.setFontSize(18); doc.text('PURCHASE ORDER', 195, 22, { align: 'right' })
+
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_GRAY)
+    let y = 28
+    if (branding?.address) { doc.text(branding.address, 15, y); y += 5 }
+    if (branding?.phone) { doc.text(`Tel: ${branding.phone}`, 15, y); y += 5 }
+    if (branding?.kraPIN) doc.text(`KRA PIN: ${branding.kraPIN}`, 15, y)
+    doc.text(`PO #: ${po.po_number}`, 195, 28, { align: 'right' })
+    doc.text(`Date: ${new Date(po.created_at).toLocaleDateString('en-KE')}`, 195, 33, { align: 'right' })
+    doc.text(`Status: ${po.status}`, 195, 38, { align: 'right' })
+
+    doc.setDrawColor(226, 232, 240); doc.line(15, 43, 195, 43)
+
+    doc.setFontSize(8); doc.setTextColor(...PDF_GRAY); doc.setFont('helvetica', 'bold')
+    doc.text('SUPPLIER', 15, 50)
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...PDF_DARK)
+    doc.text(sup?.name ?? '—', 15, 56)
+    let supY = 61
+    if (sup?.address) { doc.setFontSize(9); doc.setTextColor(...PDF_GRAY); doc.text(`${sup.address}${sup.city ? ', ' + sup.city : ''}`, 15, supY); supY += 5 }
+    if (sup?.phone) { doc.text(`Tel: ${sup.phone}`, 15, supY) }
+
+    autoTable(doc, {
+      startY: 68,
+      head: [['Product', 'Qty', 'Unit Price', 'VAT', 'Total']],
+      body: items.map((it) => [it.product_name, `${it.quantity} ${it.unit}`, formatCurrency(it.unit_price), formatCurrency(it.vat_amount), formatCurrency(it.total)]),
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: PDF_BLUE, textColor: 255, fontStyle: 'bold' },
+      columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    })
+
+    const afterTable = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 5
+    const totalsX = 130
+    doc.setFontSize(9); doc.setTextColor(...PDF_GRAY); doc.text('Subtotal', totalsX, afterTable + 6)
+    doc.setTextColor(...PDF_DARK); doc.text(formatCurrency(po.subtotal), 195, afterTable + 6, { align: 'right' })
+    doc.setTextColor(...PDF_GRAY); doc.text('VAT', totalsX, afterTable + 12)
+    doc.setTextColor(...PDF_DARK); doc.text(formatCurrency(po.vat_amount), 195, afterTable + 12, { align: 'right' })
+    doc.setDrawColor(...PDF_BLUE); doc.line(totalsX, afterTable + 15, 195, afterTable + 15)
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(...PDF_BLUE)
+    doc.text('TOTAL', totalsX, afterTable + 21)
+    doc.text(formatCurrency(po.total_amount), 195, afterTable + 21, { align: 'right' })
+
+    if (po.notes) {
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_GRAY)
+      doc.text(`Notes: ${po.notes}`, 15, afterTable + 32)
+    }
+
+    doc.save(`PO-${po.po_number}.pdf`)
+  }
 
   return (
     <ModalShell title={`Purchase Order: ${po.po_number}`} onClose={onClose} maxW="max-w-2xl">
       <div className="p-5 space-y-4">
+        <div className="flex justify-end gap-2">
+          <button onClick={handleDownloadPDF} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition">
+            <Download className="w-3.5 h-3.5" /> Download PDF
+          </button>
+          <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+            <Printer className="w-3.5 h-3.5" /> Print
+          </button>
+        </div>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><p className="text-xs text-slate-500 dark:text-slate-400">Supplier</p><p className="font-medium text-slate-800 dark:text-white">{sup?.name ?? '—'}</p></div>
           <div><p className="text-xs text-slate-500 dark:text-slate-400">Status</p>
@@ -1401,6 +1572,7 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
 
 function GRNDetailModal({ grn, onClose }: { grn: GoodsReceivedNote; onClose: () => void }) {
   const supabase = createClient()
+  const branding = useTenantBranding()
   const [items, setItems] = useState<GRNItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -1409,12 +1581,124 @@ function GRNDetailModal({ grn, onClose }: { grn: GoodsReceivedNote; onClose: () 
       .then(({ data }) => { setItems((data as GRNItem[]) ?? []); setLoading(false) })
   }, [grn.id])
 
-  const sup = grn.supplier as { name?: string } | undefined
+  const sup = grn.supplier as { name?: string; email?: string; phone?: string; address?: string; city?: string } | undefined
   const po = grn.purchase_order as { po_number?: string } | undefined
+  const grandTotal = grn.total_cost + grn.vat_amount
+
+  function supplierBlockHtml() {
+    return `<div class="mb-6"><p class="text-xs font-bold text-slate-500" style="text-transform:uppercase;margin-bottom:8px">Supplier</p>
+      <p class="font-semibold text-slate-800">${sup?.name ?? '—'}</p>
+      ${sup?.address ? `<p class="text-slate-500 text-xs">${sup.address}${sup.city ? ', ' + sup.city : ''}</p>` : ''}
+      ${sup?.phone ? `<p class="text-slate-500 text-xs">Tel: ${sup.phone}</p>` : ''}
+    </div>`
+  }
+
+  function itemRowsHtml() {
+    return items.map((it) => `<tr>
+      <td>${it.product_name}</td>
+      <td>${it.ordered_qty}</td>
+      <td>${it.received_qty}</td>
+      <td>${it.damaged_qty}</td>
+      <td>${formatCurrency(it.unit_cost)}</td>
+      <td>${formatCurrency(it.total_cost)}</td>
+    </tr>`).join('')
+  }
+
+  function handlePrint() {
+    const headHtml = `<div class="flex justify-between mb-4">
+      <div><p class="text-2xl font-bold text-blue-700">${branding?.name ?? 'Store'}</p>
+        <div class="text-slate-500 text-xs" style="margin-top:4px">
+          ${branding?.address ? `<p>${branding.address}</p>` : ''}
+          ${branding?.phone ? `<p>Tel: ${branding.phone}</p>` : ''}
+          ${branding?.kraPIN ? `<p>KRA PIN: ${branding.kraPIN}</p>` : ''}
+        </div>
+      </div>
+      <div class="text-right">
+        <p class="text-2xl font-bold text-blue-700">GOODS RECEIVED NOTE</p>
+        <div class="text-slate-500 text-xs" style="margin-top:8px">
+          <p><span class="font-semibold text-slate-800">GRN #:</span> ${grn.grn_number}</p>
+          <p><span class="font-semibold text-slate-800">Date:</span> ${new Date(grn.received_date).toLocaleDateString('en-KE')}</p>
+          <p><span class="font-semibold text-slate-800">PO Ref:</span> ${po?.po_number ?? '—'}</p>
+          <p><span class="font-semibold text-slate-800">Status:</span> ${grn.status}</p>
+        </div>
+      </div>
+    </div>`
+    const bodyHtml = `${supplierBlockHtml()}
+      <table><thead><tr><th>Product</th><th>Ordered</th><th>Received</th><th>Damaged</th><th>Unit Cost</th><th>Total</th></tr></thead>
+      <tbody>${itemRowsHtml()}</tbody></table>
+      <div class="totals">
+        <div><span class="text-slate-500">Cost</span><span>${formatCurrency(grn.total_cost)}</span></div>
+        <div><span class="text-slate-500">VAT</span><span>${formatCurrency(grn.vat_amount)}</span></div>
+        <div class="font-bold text-blue-700" style="border-top:1px solid #bfdbfe;padding-top:6px;margin-top:4px"><span>TOTAL</span><span>${formatCurrency(grandTotal)}</span></div>
+      </div>
+      ${grn.supplier_invoice_ref ? `<p class="text-xs text-slate-500" style="margin-top:16px">Supplier Invoice Ref: ${grn.supplier_invoice_ref}</p>` : ''}
+      ${grn.notes ? `<p class="text-xs text-slate-500 mb-2">Notes: ${grn.notes}</p>` : ''}`
+    printDocument(`GRN ${grn.grn_number}`, headHtml, bodyHtml)
+  }
+
+  function handleDownloadPDF() {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+    doc.setFontSize(20); doc.setTextColor(...PDF_BLUE); doc.setFont('helvetica', 'bold')
+    doc.text(branding?.name ?? 'Store', 15, 22)
+    doc.setFontSize(16); doc.text('GOODS RECEIVED NOTE', 195, 22, { align: 'right' })
+
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_GRAY)
+    let y = 28
+    if (branding?.address) { doc.text(branding.address, 15, y); y += 5 }
+    if (branding?.phone) { doc.text(`Tel: ${branding.phone}`, 15, y); y += 5 }
+    if (branding?.kraPIN) doc.text(`KRA PIN: ${branding.kraPIN}`, 15, y)
+    doc.text(`GRN #: ${grn.grn_number}`, 195, 28, { align: 'right' })
+    doc.text(`Date: ${new Date(grn.received_date).toLocaleDateString('en-KE')}`, 195, 33, { align: 'right' })
+    doc.text(`PO Ref: ${po?.po_number ?? '—'}`, 195, 38, { align: 'right' })
+
+    doc.setDrawColor(226, 232, 240); doc.line(15, 43, 195, 43)
+
+    doc.setFontSize(8); doc.setTextColor(...PDF_GRAY); doc.setFont('helvetica', 'bold')
+    doc.text('SUPPLIER', 15, 50)
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...PDF_DARK)
+    doc.text(sup?.name ?? '—', 15, 56)
+    if (sup?.address) { doc.setFontSize(9); doc.setTextColor(...PDF_GRAY); doc.text(`${sup.address}${sup.city ? ', ' + sup.city : ''}`, 15, 61) }
+
+    autoTable(doc, {
+      startY: 68,
+      head: [['Product', 'Ordered', 'Received', 'Damaged', 'Unit Cost', 'Total']],
+      body: items.map((it) => [it.product_name, String(it.ordered_qty), String(it.received_qty), String(it.damaged_qty), formatCurrency(it.unit_cost), formatCurrency(it.total_cost)]),
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: PDF_BLUE, textColor: 255, fontStyle: 'bold' },
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right' } },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+    })
+
+    const afterTable = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 5
+    const totalsX = 130
+    doc.setFontSize(9); doc.setTextColor(...PDF_GRAY); doc.text('Cost', totalsX, afterTable + 6)
+    doc.setTextColor(...PDF_DARK); doc.text(formatCurrency(grn.total_cost), 195, afterTable + 6, { align: 'right' })
+    doc.setTextColor(...PDF_GRAY); doc.text('VAT', totalsX, afterTable + 12)
+    doc.setTextColor(...PDF_DARK); doc.text(formatCurrency(grn.vat_amount), 195, afterTable + 12, { align: 'right' })
+    doc.setDrawColor(...PDF_BLUE); doc.line(totalsX, afterTable + 15, 195, afterTable + 15)
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(...PDF_BLUE)
+    doc.text('TOTAL', totalsX, afterTable + 21)
+    doc.text(formatCurrency(grandTotal), 195, afterTable + 21, { align: 'right' })
+
+    let noteY = afterTable + 32
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_GRAY)
+    if (grn.supplier_invoice_ref) { doc.text(`Supplier Invoice Ref: ${grn.supplier_invoice_ref}`, 15, noteY); noteY += 5 }
+    if (grn.notes) doc.text(`Notes: ${grn.notes}`, 15, noteY)
+
+    doc.save(`GRN-${grn.grn_number}.pdf`)
+  }
 
   return (
     <ModalShell title={`GRN: ${grn.grn_number}`} onClose={onClose} maxW="max-w-2xl">
       <div className="p-5 space-y-4">
+        <div className="flex justify-end gap-2">
+          <button onClick={handleDownloadPDF} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition">
+            <Download className="w-3.5 h-3.5" /> Download PDF
+          </button>
+          <button onClick={handlePrint} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+            <Printer className="w-3.5 h-3.5" /> Print
+          </button>
+        </div>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div><p className="text-xs text-slate-500 dark:text-slate-400">Supplier</p><p className="font-medium text-slate-800 dark:text-white">{sup?.name ?? '—'}</p></div>
           <div><p className="text-xs text-slate-500 dark:text-slate-400">Status</p>

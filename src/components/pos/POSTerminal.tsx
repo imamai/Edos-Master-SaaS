@@ -316,10 +316,22 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
       {showHeld && <HeldSalesModal tenantId={tenantId} onClose={() => setShowHeld(false)} />}
       {showQuotation && (
         <QuotationModal
-          items={cart.items} customer={cart.customer}
+          items={cart.items.map((i) => ({
+            productId: i.product.is_custom ? undefined : i.product.id,
+            name: i.product.name,
+            sku: i.product.is_custom ? undefined : i.product.sku,
+            unit: i.product.unit,
+            quantity: i.quantity,
+            unit_price: i.unit_price,
+            discount_amount: i.discount_amount,
+            tax_amount: i.tax_amount,
+            total_price: i.total_price,
+          }))}
+          customer={cart.customer}
           subtotal={subtotal} discountAmount={totalDiscount} taxAmount={totalTax} total={total}
           tenantName={tenantName} tenantPhone={tenantPhone} tenantAddress={tenantAddress}
           tenantKraPIN={tenantKraPIN} quotationNotes={quotationNotes}
+          saveContext={{ tenantId, branchId, cashierId, customerId: cart.customer?.id ?? null }}
           onClose={() => setShowQuotation(false)}
         />
       )}

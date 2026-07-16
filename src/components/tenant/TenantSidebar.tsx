@@ -50,7 +50,15 @@ export default function TenantSidebar({ tenant, profile, open = false, onClose }
         { href: `${base}/inventory/intelligence`, label: 'Intelligence' },
       ],
     },
-    { href: `${base}/sales`, label: 'Sales', icon: Receipt },
+    {
+      href: `${base}/sales`,
+      label: 'Sales',
+      icon: Receipt,
+      children: [
+        { href: `${base}/sales`, label: 'Sales History' },
+        { href: `${base}/quotations`, label: 'Quotations' },
+      ],
+    },
     { href: `${base}/customers`, label: 'Customers', icon: Users },
     {
       href: `${base}/procurement`,
