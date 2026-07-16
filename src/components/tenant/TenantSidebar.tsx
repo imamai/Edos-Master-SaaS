@@ -16,6 +16,8 @@ import { useTheme } from '@/components/theme/ThemeProvider'
 interface Props {
   tenant: Tenant
   profile: Profile
+  open?: boolean
+  onClose?: () => void
 }
 
 interface NavItem {
@@ -26,7 +28,7 @@ interface NavItem {
   children?: Array<{ href: string; label: string }>
 }
 
-export default function TenantSidebar({ tenant, profile }: Props) {
+export default function TenantSidebar({ tenant, profile, open = false, onClose }: Props) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -83,7 +85,18 @@ export default function TenantSidebar({ tenant, profile }: Props) {
   }
 
   return (
-    <aside className="w-56 flex flex-col h-screen border-r border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
+    <>
+      {open && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={cn(
+        'fixed inset-y-0 left-0 z-40 w-64 flex flex-col h-screen border-r border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-transform duration-200 md:static md:translate-x-0 md:w-56',
+        open ? 'translate-x-0' : '-translate-x-full'
+      )}>
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-gray-200 dark:border-slate-800">
         {tenant.logo_url ? (
@@ -135,6 +148,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
                         <Link
                           key={child.href}
                           href={child.href}
+                          onClick={onClose}
                           className={cn(
                             'block px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                             childActive
@@ -158,6 +172,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={cn(
                 'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 isActive
@@ -202,6 +217,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
           Sign Out
         </button>
       </div>
-    </aside>
+      </aside>
+    </>
   )
 }

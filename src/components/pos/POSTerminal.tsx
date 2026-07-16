@@ -106,9 +106,9 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
   const itemCount = cart.items.reduce((s, i) => s + i.quantity, 0)
 
   return (
-    <div className="flex h-full gap-4 p-4">
+    <div className="flex flex-col lg:flex-row h-full gap-3 lg:gap-4 p-3 lg:p-4">
       {/* ── Left: Product Browser ── */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+      <div className="flex-1 min-h-0 flex flex-col min-w-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
@@ -162,7 +162,7 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
       </div>
 
       {/* ── Right: Cart ── */}
-      <div className="w-80 lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex-shrink-0 transition-colors">
+      <div className="w-full h-[46vh] lg:h-auto lg:w-80 xl:w-96 min-h-0 flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex-shrink-0 transition-colors">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">

@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
-import TenantSidebar from '@/components/tenant/TenantSidebar'
-import TenantTopbar from '@/components/tenant/TenantTopbar'
+import TenantShell from '@/components/tenant/TenantShell'
 
 export default async function TenantLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -55,14 +54,8 @@ export default async function TenantLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
-      <TenantSidebar tenant={tenant} profile={profile} />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TenantTopbar tenant={tenant} profile={profile} />
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+    <TenantShell tenant={tenant} profile={profile}>
+      {children}
+    </TenantShell>
   )
 }
