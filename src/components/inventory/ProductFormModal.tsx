@@ -182,9 +182,9 @@ export default function ProductFormModal({ product, categories, tenantId, branch
           </div>
           <Field label="Product Photo">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <div className="w-20 h-20 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0 p-1.5">
                 {imageUrl
-                  ? <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+                  ? <img src={imageUrl} alt="" className="max-w-full max-h-full object-contain" />
                   : <ImageIcon className="w-7 h-7 text-slate-300 dark:text-slate-600" />}
               </div>
               <div className="flex items-center gap-2">

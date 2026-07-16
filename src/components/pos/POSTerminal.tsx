@@ -361,16 +361,15 @@ function ProductCard({ product, primaryColor, priceMode, onAdd }: { product: Pro
       ) : (
         <span className="absolute top-2 left-2 text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-1.5 py-0.5 rounded font-medium">Retail</span>
       )}
-      <div className="w-full h-16 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-700 dark:to-slate-700/50 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+      <div className="w-full aspect-square bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-700 dark:to-slate-700/50 rounded-lg mb-2 flex items-center justify-center overflow-hidden p-1.5">
         {product.image_url
-          ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-lg" />
+          ? <img src={product.image_url} alt={product.name} className="max-w-full max-h-full object-contain" />
           : <Package className="w-8 h-8 text-blue-400 dark:text-slate-400" />
         }
       </div>
       <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-tight line-clamp-2">{product.name}</p>
-      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{product.sku}</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 truncate">{product.sku} · {product.stock_quantity ?? 0} {product.unit}</p>
       <p className="text-sm font-bold mt-1" style={{ color: primaryColor }}>{formatCurrency(price)}</p>
-      <p className="text-xs text-slate-400 dark:text-slate-500">Stock: {product.stock_quantity ?? 0} {product.unit}</p>
     </button>
   )
 }

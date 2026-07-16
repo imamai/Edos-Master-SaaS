@@ -177,9 +177,9 @@ export default function InventoryClient() {
                     <tr key={product.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center flex-shrink-0 overflow-hidden p-0.5">
                             {product.image_url
-                              ? <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+                              ? <img src={product.image_url} alt="" className="max-w-full max-h-full object-contain" />
                               : <Package className="w-4 h-4 text-blue-500 dark:text-blue-400" />}
                           </div>
                           <div>
