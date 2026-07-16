@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import toast from 'react-hot-toast'
-import type { CartItem, CartCustomer } from '@/store/cart'
-import { DollarSign, Smartphone, CreditCard, Users, X, CheckCircle2, Loader2, AlertCircle } from 'lucide-react'
+import type { CartItem, CartCustomer, PriceMode } from '@/store/cart'
+import { DollarSign, Smartphone, CreditCard, Users, X, CheckCircle2, Loader2, AlertCircle, Hash } from 'lucide-react'
 import MpesaPayment from './MpesaPayment'
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
   taxAmount: number
   customer: CartCustomer | null
   items: CartItem[]
+  priceMode: PriceMode
   tenantId: string
   branchId: string | null
   cashierId: string
@@ -21,7 +22,7 @@ interface Props {
   onSuccess: (saleId: string, receiptNumber: string) => void
 }
 
-type Step = 'method' | 'cash' | 'card' | 'mpesa' | 'credit' | 'processing' | 'done'
+type Step = 'method' | 'cash' | 'card' | 'mpesa' | 'mpesa_manual' | 'credit' | 'processing' | 'done'
 
 function generateReceiptNumber(): string {
   const ts = Date.now().toString().slice(-8)
@@ -39,12 +40,12 @@ function ModalWrapper({ children, onClose }: { children: React.ReactNode; onClos
   )
 }
 
-export default function PaymentModal({ total, subtotal, discountAmount, taxAmount, customer, items, tenantId, branchId, cashierId, onClose, onSuccess }: Props) {
+export default function PaymentModal({ total, subtotal, discountAmount, taxAmount, customer, items, priceMode, tenantId, branchId, cashierId, onClose, onSuccess }: Props) {
   const [step, setStep] = useState<Step>('method')
   const [cashGiven, setCashGiven] = useState<number>(total)
   const change = Math.max(0, cashGiven - total)
 
-  async function completeSale(method: string, payments: { method: string; amount: number }[]) {
+  async function completeSale(method: string, payments: { method: string; amount: number; checkoutRequestId?: string; reference?: string }[]) {
     setStep('processing')
     try {
       const receipt = generateReceiptNumber()
@@ -65,11 +66,14 @@ export default function PaymentModal({ total, subtotal, discountAmount, taxAmoun
             paid_amount: payments.reduce((s, p) => s + p.amount, 0),
             change_amount: method === 'cash' ? change : 0,
             payment_method: method,
+            price_mode: priceMode,
           },
           items: items.map((i) => ({
-            product_id: i.product.id,
+            product_id: i.product.is_custom ? null : i.product.id,
+            custom_name: i.product.is_custom ? i.product.name : undefined,
             quantity: i.quantity,
             unit_price: i.unit_price,
+            vat_rate: i.product.vat_rate,
             discount_amount: i.discount_amount,
             tax_amount: i.tax_amount,
             total_price: i.total_price,
@@ -121,7 +125,20 @@ export default function PaymentModal({ total, subtotal, discountAmount, taxAmoun
           amount={total}
           tenantId={tenantId}
           customerPhone={customer?.phone}
-          onSuccess={() => completeSale('mpesa', [{ method: 'mpesa', amount: total }])}
+          onSuccess={(checkoutRequestId) => completeSale('mpesa', [{ method: 'mpesa', amount: total, checkoutRequestId }])}
+          onCancel={() => setStep('method')}
+        />
+      </ModalWrapper>
+    )
+  }
+
+  if (step === 'mpesa_manual') {
+    return (
+      <ModalWrapper onClose={() => setStep('method')}>
+        <MpesaTillPayment
+          amount={total}
+          tenantId={tenantId}
+          onConfirm={(reference) => completeSale('mpesa', [{ method: 'mpesa_manual', amount: total, reference }])}
           onCancel={() => setStep('method')}
         />
       </ModalWrapper>
@@ -242,7 +259,8 @@ export default function PaymentModal({ total, subtotal, discountAmount, taxAmoun
         <div className="grid grid-cols-2 gap-3">
           {[
             { label: 'Cash', icon: DollarSign, color: 'green', action: () => setStep('cash') },
-            { label: 'M-Pesa', icon: Smartphone, color: 'green', action: () => setStep('mpesa') },
+            { label: 'M-Pesa STK Push', icon: Smartphone, color: 'green', action: () => setStep('mpesa') },
+            { label: 'M-Pesa Till/Paybill', icon: Hash, color: 'green', action: () => setStep('mpesa_manual') },
             { label: 'Card', icon: CreditCard, color: 'blue', action: () => completeSale('card', [{ method: 'card', amount: total }]) },
             { label: 'Credit', icon: Users, color: 'orange', action: () => setStep('credit') },
           ].map(({ label, icon: Icon, color, action }) => {
@@ -254,12 +272,82 @@ export default function PaymentModal({ total, subtotal, discountAmount, taxAmoun
             return (
               <button key={label} onClick={action} className={`flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition ${cls}`}>
                 <Icon className="w-8 h-8" />
-                <span className="font-semibold">{label}</span>
+                <span className="font-semibold text-sm text-center">{label}</span>
               </button>
             )
           })}
         </div>
       </div>
     </ModalWrapper>
+  )
+}
+
+function MpesaTillPayment({ amount, tenantId, onConfirm, onCancel }: {
+  amount: number; tenantId: string; onConfirm: (reference: string) => void; onCancel: () => void
+}) {
+  const [loadingSettings, setLoadingSettings] = useState(true)
+  const [shortcode, setShortcode] = useState<string | null>(null)
+  const [reference, setReference] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/mpesa/settings')
+      .then((r) => r.json())
+      .then((data) => setShortcode(data.settings?.shortcode ?? null))
+      .catch(() => setShortcode(null))
+      .finally(() => setLoadingSettings(false))
+  }, [])
+
+  const valid = reference.trim().length >= 6
+
+  function handleConfirm() {
+    if (!valid) return
+    setSubmitting(true)
+    onConfirm(reference.trim())
+  }
+
+  return (
+    <div className="p-6 space-y-5">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+          <Hash className="w-5 h-5 text-green-600" />
+        </div>
+        <div>
+          <h3 className="font-bold text-slate-800">M-Pesa Till/Paybill</h3>
+          <p className="text-xs text-slate-500">Customer pays independently, then you confirm the code</p>
+        </div>
+      </div>
+      <div className="bg-green-50 rounded-xl p-4 text-center space-y-1">
+        <p className="text-3xl font-bold text-green-600">{formatCurrency(amount)}</p>
+        {!loadingSettings && (
+          <p className="text-sm text-green-700">
+            {shortcode ? <>Till/Paybill No: <strong>{shortcode}</strong></> : 'Till/Paybill number not configured for this account'}
+          </p>
+        )}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">M-Pesa Confirmation Code</label>
+        <input
+          type="text"
+          value={reference}
+          onChange={(e) => setReference(e.target.value.toUpperCase())}
+          placeholder="e.g. QGH7XXXXXX"
+          className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 font-mono tracking-wide focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+        <p className="text-xs text-slate-400 mt-1">Read the code from the customer&apos;s M-Pesa confirmation SMS before completing the sale.</p>
+      </div>
+      <div className="flex gap-3">
+        <button onClick={onCancel} className="px-4 py-3 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition">
+          Back
+        </button>
+        <button
+          disabled={!valid || submitting}
+          onClick={handleConfirm}
+          className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white font-bold rounded-xl transition"
+        >
+          {submitting ? 'Confirming…' : 'Confirm Payment Received'}
+        </button>
+      </div>
+    </div>
   )
 }

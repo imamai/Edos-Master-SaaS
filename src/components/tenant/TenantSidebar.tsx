@@ -6,11 +6,12 @@ import { cn } from '@/lib/utils'
 import {
   ShoppingCart, Package, Receipt, Users, TrendingDown,
   BarChart3, Settings, LogOut, Store, LayoutDashboard, ShieldCheck,
-  ShoppingBag, ChevronDown
+  ShoppingBag, ChevronDown, Sun, Moon
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
 import type { Tenant, Profile } from '@/types'
+import { useTheme } from '@/components/theme/ThemeProvider'
 
 interface Props {
   tenant: Tenant
@@ -30,6 +31,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
   const router = useRouter()
   const supabase = createClient()
   const [openGroup, setOpenGroup] = useState<string | null>(null)
+  const { theme, toggleTheme } = useTheme()
 
   // On localhost, the app uses path-based routing (/tenant/*) instead of subdomains
   const base = pathname.startsWith('/tenant') ? '/tenant' : ''
@@ -81,9 +83,9 @@ export default function TenantSidebar({ tenant, profile }: Props) {
   }
 
   return (
-    <aside className="w-56 flex flex-col h-screen border-r border-gray-200 bg-white">
+    <aside className="w-56 flex flex-col h-screen border-r border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-colors">
       {/* Logo */}
-      <div className="h-16 flex items-center px-4 border-b">
+      <div className="h-16 flex items-center px-4 border-b border-gray-200 dark:border-slate-800">
         {tenant.logo_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={tenant.logo_url} alt={tenant.name} className="h-8 object-contain" />
@@ -95,7 +97,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
             >
               <Store className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-sm text-gray-900 truncate">{tenant.name}</span>
+            <span className="font-bold text-sm text-gray-900 dark:text-white truncate">{tenant.name}</span>
           </div>
         )}
       </div>
@@ -115,7 +117,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
                     'flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                     groupActive
                       ? 'text-white'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
                   )}
                   style={groupActive ? { backgroundColor: tenant.primary_color } : undefined}
                 >
@@ -126,7 +128,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
                   <ChevronDown className={cn('w-3.5 h-3.5 transition-transform', isExpanded ? 'rotate-180' : '')} />
                 </button>
                 {isExpanded && (
-                  <div className="mt-0.5 ml-4 pl-3 border-l-2 border-slate-100 space-y-0.5">
+                  <div className="mt-0.5 ml-4 pl-3 border-l-2 border-slate-100 dark:border-slate-800 space-y-0.5">
                     {item.children.map((child) => {
                       const childActive = pathname === child.href || (child.href !== item.href && pathname.startsWith(child.href))
                       return (
@@ -137,7 +139,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
                             'block px-3 py-2 rounded-lg text-xs font-medium transition-colors',
                             childActive
                               ? 'text-white'
-                              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                              : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
                           )}
                           style={childActive ? { backgroundColor: tenant.primary_color } : undefined}
                         >
@@ -160,7 +162,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
                 'flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 isActive
                   ? 'text-white'
-                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
               )}
               style={isActive ? { backgroundColor: tenant.primary_color } : undefined}
             >
@@ -172,7 +174,7 @@ export default function TenantSidebar({ tenant, profile }: Props) {
       </nav>
 
       {/* User */}
-      <div className="px-3 py-3 border-t">
+      <div className="px-3 py-3 border-t border-gray-200 dark:border-slate-800">
         <div className="flex items-center gap-2 mb-2 px-2">
           <div
             className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
@@ -181,13 +183,20 @@ export default function TenantSidebar({ tenant, profile }: Props) {
             {profile.full_name?.[0]?.toUpperCase() || profile.email[0].toUpperCase()}
           </div>
           <div className="overflow-hidden">
-            <p className="text-xs font-medium text-gray-900 truncate">{profile.full_name || 'User'}</p>
-            <p className="text-xs text-gray-400 capitalize">{profile.role}</p>
+            <p className="text-xs font-medium text-gray-900 dark:text-white truncate">{profile.full_name || 'User'}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 capitalize">{profile.role}</p>
           </div>
         </div>
         <button
+          onClick={toggleTheme}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white transition-colors w-full"
+        >
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        </button>
+        <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors w-full"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white transition-colors w-full"
         >
           <LogOut className="w-4 h-4" />
           Sign Out

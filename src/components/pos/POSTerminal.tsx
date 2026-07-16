@@ -2,23 +2,24 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useCartStore } from '@/store/cart'
+import { useCartStore, priceForMode } from '@/store/cart'
 import { formatCurrency } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import {
   Search, Barcode, ShoppingCart, Trash2, Plus, Minus,
-  User, Tag, ChevronRight, X, Pause, Play, Package, AlertCircle, FileText,
+  User, Tag, ChevronRight, X, Pause, Play, Package, AlertCircle, FileText, Store,
 } from 'lucide-react'
 import PaymentModal from './PaymentModal'
 import CustomerSearchModal from './CustomerSearchModal'
 import HeldSalesModal from './HeldSalesModal'
 import ReceiptModal from './ReceiptModal'
 import QuotationModal from './QuotationModal'
+import CustomItemModal from './CustomItemModal'
 import type { CartCustomer, CartItem } from '@/store/cart'
 
 interface Product {
   id: string; sku: string; name: string; barcode?: string
-  selling_price: number; vat_rate: number; unit: string
+  selling_price: number; wholesale_price?: number | null; vat_rate: number; unit: string
   stock_quantity: number; category_name: string; is_active: boolean
   image_url?: string
 }
@@ -53,6 +54,7 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
   const [showHeld, setShowHeld] = useState(false)
   const [showCartDiscount, setShowCartDiscount] = useState(false)
   const [showQuotation, setShowQuotation] = useState(false)
+  const [showCustomItem, setShowCustomItem] = useState(false)
   const [completedSale, setCompletedSale] = useState<{ id: string; receipt: string } | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
@@ -106,10 +108,10 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
   return (
     <div className="flex h-full gap-4 p-4">
       {/* ── Left: Product Browser ── */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-4 border-b border-slate-100 space-y-3">
+      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-colors">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 space-y-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input
               ref={searchRef}
               type="text"
@@ -117,20 +119,20 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleBarcodeInput}
               placeholder="Search by name, SKU, or scan barcode…"
-              className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <Barcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Barcode className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${!selectedCategory ? 'text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${!selectedCategory ? 'text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
               style={!selectedCategory ? { backgroundColor: primaryColor } : undefined}
             >All</button>
             {categories.map((cat) => (
               <button key={cat.id}
                 onClick={() => setSelectedCategory(cat.id === selectedCategory ? null : cat.id)}
-                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${cat.id === selectedCategory ? 'text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition ${cat.id === selectedCategory ? 'text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                 style={cat.id === selectedCategory ? { backgroundColor: cat.color || primaryColor } : undefined}
               >{cat.name}</button>
             ))}
@@ -140,17 +142,17 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
         <div className="flex-1 overflow-y-auto p-4">
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-32 bg-slate-100 rounded-xl animate-pulse" />)}
+              {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}
             </div>
           ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+            <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
               <Package className="w-12 h-12 mb-3" />
               <p className="text-sm">No products found</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {products.map((product) => (
-                <ProductCard key={product.id} product={product} primaryColor={primaryColor}
+                <ProductCard key={product.id} product={product} primaryColor={primaryColor} priceMode={cart.priceMode}
                   onAdd={() => { cart.addItem(product); toast.success(`${product.name} added`, { duration: 1200 }) }}
                 />
               ))}
@@ -160,54 +162,75 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
       </div>
 
       {/* ── Right: Cart ── */}
-      <div className="w-80 lg:w-96 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex-shrink-0">
+      <div className="w-80 lg:w-96 flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden flex-shrink-0 transition-colors">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-blue-600" />
-            <span className="font-semibold text-slate-800">
-              Cart {itemCount > 0 && <span className="text-blue-600">({itemCount})</span>}
+            <ShoppingCart className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <span className="font-semibold text-slate-800 dark:text-white">
+              Cart {itemCount > 0 && <span className="text-blue-600 dark:text-blue-400">({itemCount})</span>}
             </span>
           </div>
           <div className="flex items-center gap-1">
+            <button onClick={() => setShowCustomItem(true)} title="Add Custom Item"
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition">
+              <Tag className="w-4 h-4" />
+            </button>
             <button onClick={() => setShowHeld(true)} title="Held Sales"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
               <Play className="w-4 h-4" />
             </button>
             <button onClick={() => setShowQuotation(true)} disabled={cart.items.length === 0} title="Generate Quotation"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition disabled:opacity-40">
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition disabled:opacity-40">
               <FileText className="w-4 h-4" />
             </button>
             <button onClick={holdSale} disabled={cart.items.length === 0} title="Hold Sale"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition disabled:opacity-40">
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950 transition disabled:opacity-40">
               <Pause className="w-4 h-4" />
             </button>
             <button onClick={cart.clearCart} disabled={cart.items.length === 0} title="Clear Cart"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition disabled:opacity-40">
+              className="p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition disabled:opacity-40">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
 
+        {/* Retail / Wholesale */}
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800">
+          <Store className="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+          <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden flex-1">
+            {(['retail', 'wholesale'] as const).map((mode) => (
+              <button key={mode} onClick={() => cart.setPriceMode(mode)}
+                className={`flex-1 py-1.5 text-xs font-medium capitalize transition ${
+                  cart.priceMode === mode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}>
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Customer */}
         <button onClick={() => setShowCustomer(true)}
-          className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 hover:bg-slate-50 transition text-left">
-          <User className="w-4 h-4 text-slate-400" />
-          <span className={`text-sm flex-1 ${cart.customer ? 'text-slate-800 font-medium' : 'text-slate-400'}`}>
+          className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left">
+          <User className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+          <span className={`text-sm flex-1 ${cart.customer ? 'text-slate-800 dark:text-white font-medium' : 'text-slate-400 dark:text-slate-500'}`}>
             {cart.customer?.name ?? 'Add Customer (optional)'}
           </span>
           {cart.customer && (
-            <button onClick={(e) => { e.stopPropagation(); cart.setCustomer(null) }} className="text-slate-400 hover:text-red-500">
+            <button onClick={(e) => { e.stopPropagation(); cart.setCustomer(null) }} className="text-slate-400 dark:text-slate-500 hover:text-red-500">
               <X className="w-4 h-4" />
             </button>
           )}
-          <ChevronRight className="w-4 h-4 text-slate-300" />
+          <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600" />
         </button>
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto">
           {cart.items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400 p-8">
+            <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500 p-8">
               <ShoppingCart className="w-12 h-12 mb-3 opacity-40" />
               <p className="text-sm text-center">Cart is empty. Tap a product to add it.</p>
             </div>
@@ -227,11 +250,11 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
         {/* Totals + Charge */}
         {cart.items.length > 0 && (
           <>
-            <div className="border-t border-slate-100 px-4 py-3 space-y-1.5">
-              <div className="flex justify-between text-sm text-slate-600"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
+            <div className="border-t border-slate-100 dark:border-slate-800 px-4 py-3 space-y-1.5">
+              <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
               <div className="flex items-center gap-2">
                 <button onClick={() => setShowCartDiscount(!showCartDiscount)}
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:underline">
+                  className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
                   <Tag className="w-3 h-3" />
                   {showCartDiscount ? 'Remove Discount' : 'Add Discount'}
                 </button>
@@ -240,23 +263,23 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
                 <div className="flex items-center gap-2">
                   <select value={cart.discountType}
                     onChange={(e) => cart.setDiscount(e.target.value as 'percent' | 'fixed', cart.discountValue)}
-                    className="text-xs border border-slate-200 rounded-lg px-2 py-1 bg-white text-slate-700">
+                    className="text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200">
                     <option value="fixed">KES</option>
                     <option value="percent">%</option>
                   </select>
                   <input type="number" min={0} value={cart.discountValue}
                     onChange={(e) => cart.setDiscount(cart.discountType, Number(e.target.value))}
                     placeholder="0"
-                    className="flex-1 text-xs border border-slate-200 rounded-lg px-2 py-1 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="flex-1 text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               )}
               {totalDiscount > 0 && (
-                <div className="flex justify-between text-sm text-green-600"><span>Discount</span><span>-{formatCurrency(totalDiscount)}</span></div>
+                <div className="flex justify-between text-sm text-green-600 dark:text-green-400"><span>Discount</span><span>-{formatCurrency(totalDiscount)}</span></div>
               )}
-              <div className="flex justify-between text-sm text-slate-600"><span>VAT (16%)</span><span>{formatCurrency(totalTax)}</span></div>
-              <div className="flex justify-between font-bold text-lg text-slate-800 pt-1 border-t border-slate-100">
-                <span>Total</span><span className="text-blue-600">{formatCurrency(total)}</span>
+              <div className="flex justify-between text-sm text-slate-600 dark:text-slate-300"><span>VAT (16%)</span><span>{formatCurrency(totalTax)}</span></div>
+              <div className="flex justify-between font-bold text-lg text-slate-800 dark:text-white pt-1 border-t border-slate-100 dark:border-slate-800">
+                <span>Total</span><span className="text-blue-600 dark:text-blue-400">{formatCurrency(total)}</span>
               </div>
             </div>
             <div className="p-3 pt-0">
@@ -274,7 +297,7 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
       {showPayment && (
         <PaymentModal
           total={total} subtotal={subtotal} discountAmount={totalDiscount} taxAmount={totalTax}
-          customer={cart.customer} items={cart.items}
+          customer={cart.customer} items={cart.reconciledItems()} priceMode={cart.priceMode}
           tenantId={tenantId} branchId={branchId} cashierId={cashierId}
           onClose={() => setShowPayment(false)}
           onSuccess={(saleId, receipt) => {
@@ -300,6 +323,12 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
           onClose={() => setShowQuotation(false)}
         />
       )}
+      {showCustomItem && (
+        <CustomItemModal
+          onAdd={(item) => { cart.addCustomItem(item); setShowCustomItem(false) }}
+          onClose={() => setShowCustomItem(false)}
+        />
+      )}
       {completedSale && (
         <ReceiptModal
           saleId={completedSale.id} receiptNumber={completedSale.receipt}
@@ -312,26 +341,36 @@ export default function POSTerminal({ tenantId, tenantName, tenantAddress, tenan
   )
 }
 
-function ProductCard({ product, primaryColor, onAdd }: { product: Product; primaryColor: string; onAdd: () => void }) {
+function ProductCard({ product, primaryColor, priceMode, onAdd }: { product: Product; primaryColor: string; priceMode: 'retail' | 'wholesale'; onAdd: () => void }) {
   const inStock = (product.stock_quantity ?? 0) > 0
+  const price = priceForMode(product, priceMode)
+  // Reflects the price actually applied, not just the cart's toggle — a
+  // product with no wholesale_price still shows "Retail" even while the
+  // cart is in wholesale mode, since that's the price it's charged at.
+  const usingWholesale = priceMode === 'wholesale' && product.wholesale_price != null
   return (
     <button onClick={onAdd} disabled={!inStock}
       className={`relative p-3 rounded-xl border text-left transition-all active:scale-95 ${
-        inStock ? 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md cursor-pointer'
-               : 'bg-slate-50 border-slate-100 opacity-60 cursor-not-allowed'}`}>
+        inStock ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md cursor-pointer'
+               : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 opacity-60 cursor-not-allowed'}`}>
       {!inStock && (
-        <span className="absolute top-2 right-2 text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-medium">Out</span>
+        <span className="absolute top-2 right-2 text-xs bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400 px-1.5 py-0.5 rounded font-medium">Out</span>
       )}
-      <div className="w-full h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg mb-2 flex items-center justify-center">
+      {usingWholesale ? (
+        <span className="absolute top-2 left-2 text-[10px] bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded font-medium">Wholesale</span>
+      ) : (
+        <span className="absolute top-2 left-2 text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 px-1.5 py-0.5 rounded font-medium">Retail</span>
+      )}
+      <div className="w-full h-16 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-700 dark:to-slate-700/50 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
         {product.image_url
           ? <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-lg" />
-          : <Package className="w-8 h-8 text-blue-400" />
+          : <Package className="w-8 h-8 text-blue-400 dark:text-slate-400" />
         }
       </div>
-      <p className="text-xs font-semibold text-slate-700 leading-tight line-clamp-2">{product.name}</p>
-      <p className="text-xs text-slate-400 mt-0.5">{product.sku}</p>
-      <p className="text-sm font-bold mt-1" style={{ color: primaryColor }}>{formatCurrency(product.selling_price)}</p>
-      <p className="text-xs text-slate-400">Stock: {product.stock_quantity ?? 0} {product.unit}</p>
+      <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-tight line-clamp-2">{product.name}</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{product.sku}</p>
+      <p className="text-sm font-bold mt-1" style={{ color: primaryColor }}>{formatCurrency(price)}</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500">Stock: {product.stock_quantity ?? 0} {product.unit}</p>
     </button>
   )
 }
@@ -341,40 +380,40 @@ function CartItemRow({ item, onQtyChange, onRemove, onDiscount }: {
 }) {
   const [editDiscount, setEditDiscount] = useState(false)
   return (
-    <div className="bg-slate-50 rounded-xl p-3">
+    <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-slate-800 truncate">{item.product.name}</p>
-          <p className="text-xs text-slate-400">{formatCurrency(item.unit_price)} each</p>
+          <p className="text-sm font-medium text-slate-800 dark:text-white truncate">{item.product.name}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">{formatCurrency(item.unit_price)} each</p>
         </div>
-        <button onClick={onRemove} className="text-slate-400 hover:text-red-500 transition"><X className="w-4 h-4" /></button>
+        <button onClick={onRemove} className="text-slate-400 dark:text-slate-500 hover:text-red-500 transition"><X className="w-4 h-4" /></button>
       </div>
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-1">
           <button onClick={() => onQtyChange(item.quantity - 1)}
-            className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
+            className="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 transition">
             <Minus className="w-3 h-3" />
           </button>
           <input type="number" value={item.quantity} onChange={(e) => onQtyChange(Number(e.target.value))}
-            className="w-12 text-center text-sm font-semibold bg-white border border-slate-200 rounded-lg py-1 text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-12 text-center text-sm font-semibold bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg py-1 text-slate-800 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
           <button onClick={() => onQtyChange(item.quantity + 1)}
-            className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition">
+            className="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 flex items-center justify-center text-slate-600 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-600 transition">
             <Plus className="w-3 h-3" />
           </button>
         </div>
         <div className="text-right">
-          <p className="text-sm font-bold text-slate-800">{formatCurrency(item.total_price)}</p>
-          {item.discount_amount > 0 && <p className="text-xs text-green-600">-{formatCurrency(item.discount_amount)}</p>}
+          <p className="text-sm font-bold text-slate-800 dark:text-white">{formatCurrency(item.total_price)}</p>
+          {item.discount_amount > 0 && <p className="text-xs text-green-600 dark:text-green-400">-{formatCurrency(item.discount_amount)}</p>}
         </div>
       </div>
-      <button onClick={() => setEditDiscount(!editDiscount)} className="text-xs text-blue-500 hover:underline mt-1">
+      <button onClick={() => setEditDiscount(!editDiscount)} className="text-xs text-blue-500 dark:text-blue-400 hover:underline mt-1">
         {editDiscount ? 'Hide discount' : 'Item discount'}
       </button>
       {editDiscount && (
         <input type="number" min={0} placeholder="Discount amount (KES)" value={item.discount_amount || ''}
           onChange={(e) => onDiscount(Number(e.target.value))}
-          className="mt-1 w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 w-full text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       )}
     </div>

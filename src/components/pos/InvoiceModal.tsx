@@ -110,8 +110,8 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
         const prod = item.products as Record<string, string> | null
         return [
           String(i + 1),
-          prod?.name ?? '—',
-          prod?.sku ?? '—',
+          (item.product_name as string | null) ?? prod?.name ?? '—',
+          (item.product_sku as string | null) ?? prod?.sku ?? '—',
           `${Number(item.quantity)} ${prod?.unit ?? ''}`.trim(),
           formatCurrency(Number(item.unit_price)),
           formatCurrency(Number(item.total_price)),
@@ -305,11 +305,13 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
               <tbody>
                 {items.map((item, i) => {
                   const prod = item.products as Record<string, string> | null
+                  const itemName = (item.product_name as string | null) ?? prod?.name ?? '—'
+                  const itemSku = (item.product_sku as string | null) ?? prod?.sku ?? '—'
                   return (
                     <tr key={i} className={i % 2 === 1 ? 'bg-slate-50' : ''}>
                       <td className="px-3 py-2.5 text-slate-500">{i + 1}</td>
-                      <td className="px-3 py-2.5 font-medium">{prod?.name ?? '—'}</td>
-                      <td className="px-3 py-2.5 text-slate-400 text-xs">{prod?.sku ?? '—'}</td>
+                      <td className="px-3 py-2.5 font-medium">{itemName}</td>
+                      <td className="px-3 py-2.5 text-slate-400 text-xs">{itemSku}</td>
                       <td className="px-3 py-2.5 text-center">{Number(item.quantity)} {prod?.unit ?? ''}</td>
                       <td className="px-3 py-2.5 text-right">{formatCurrency(Number(item.unit_price))}</td>
                       <td className="px-3 py-2.5 text-right font-medium">{formatCurrency(Number(item.total_price))}</td>

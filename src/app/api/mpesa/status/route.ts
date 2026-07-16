@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { querySTKStatus } from '@/lib/mpesa'
+import { createClient } from '@/lib/supabase/server'
 import { createClient as adminClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 import type { MpesaCredentials } from '@/lib/mpesa'
@@ -29,10 +30,26 @@ async function getTenantCredentials(tenantId: string): Promise<MpesaCredentials>
 }
 
 export async function POST(req: NextRequest) {
-  const { checkoutRequestId, tenantId } = await req.json()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!checkoutRequestId || !tenantId) {
-    return NextResponse.json({ message: 'Missing checkoutRequestId or tenantId' }, { status: 400 })
+  if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+
+  const { checkoutRequestId } = await req.json()
+
+  if (!checkoutRequestId) {
+    return NextResponse.json({ message: 'Missing checkoutRequestId' }, { status: 400 })
+  }
+
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  const tenantId = profile?.tenant_id
+  if (!tenantId) {
+    return NextResponse.json({ message: 'No tenant associated with this account' }, { status: 400 })
   }
 
   try {

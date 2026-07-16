@@ -8,7 +8,7 @@ interface Props {
   amount: number
   tenantId: string
   customerPhone?: string
-  onSuccess: () => void
+  onSuccess: (checkoutRequestId: string) => void
   onCancel: () => void
 }
 
@@ -78,7 +78,7 @@ export default function MpesaPayment({ amount, tenantId, customerPhone, onSucces
 
       if (data.status === 'completed') {
         setStep('success')
-        setTimeout(onSuccess, 1500)
+        setTimeout(() => onSuccess(id), 1500)
       } else if (data.status === 'failed' || data.status === 'cancelled') {
         setStep('failed')
         setErrorMsg(data.message ?? 'Payment was not completed')

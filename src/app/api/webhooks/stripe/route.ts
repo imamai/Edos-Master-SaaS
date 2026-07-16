@@ -22,6 +22,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
+  // Stripe redelivers on timeout/non-2xx — record the event id first so a
+  // retry of an already-processed event is a no-op instead of re-running
+  // side effects (e.g. inserting a duplicate `invoices` row).
+  // stripe_webhook_events isn't in the generated Database type yet (new
+  // table, types not regenerated) — cast narrowly for this one call.
+  const { error: dedupeError } = await (supabaseAdmin as unknown as { from(table: string): any })
+    .from('stripe_webhook_events')
+    .insert({ event_id: event.id, event_type: event.type })
+  if (dedupeError) {
+    // Unique violation on event_id means we've already handled this event.
+    if (dedupeError.code === '23505') {
+      return NextResponse.json({ received: true, deduped: true })
+    }
+    console.error('Stripe webhook dedupe-record error:', dedupeError)
+    return NextResponse.json({ error: 'Failed to record event' }, { status: 500 })
+  }
+
   try {
     switch (event.type) {
       case 'invoice.payment_succeeded': {

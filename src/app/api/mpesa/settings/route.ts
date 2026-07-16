@@ -11,16 +11,30 @@ const db = adminClient(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ) as any
 
-// GET – fetch the calling tenant's M-Pesa settings (RLS ensures own row only)
+// GET – fetch the calling tenant's M-Pesa settings (owner/manager only, RLS ensures own row only)
 export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
+  const { data: profile } = await db
+    .from('profiles')
+    .select('tenant_id, role')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.tenant_id) {
+    return NextResponse.json({ message: 'No tenant associated with this account' }, { status: 400 })
+  }
+
+  if (!['owner', 'manager', 'super_admin'].includes(profile.role as string)) {
+    return NextResponse.json({ message: 'Insufficient permissions' }, { status: 403 })
+  }
+
   const { data, error } = await db
     .from('tenant_mpesa_settings')
     .select('id, tenant_id, environment, consumer_key, consumer_secret, shortcode, passkey, initiator_name, security_credential, is_active, updated_at')
-    .eq('tenant_id', await getTenantId(user.id))
+    .eq('tenant_id', profile.tenant_id)
     .single()
 
   if (error && error.code !== 'PGRST116') {
@@ -84,13 +98,4 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({ settings: data })
-}
-
-async function getTenantId(userId: string): Promise<string | null> {
-  const { data } = await db
-    .from('profiles')
-    .select('tenant_id')
-    .eq('id', userId)
-    .single()
-  return data?.tenant_id ?? null
 }

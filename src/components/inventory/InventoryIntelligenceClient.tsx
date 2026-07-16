@@ -86,15 +86,15 @@ export default function InventoryIntelligenceClient() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Inventory Intelligence</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Stock aging, movement classification, and reorder analytics</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Inventory Intelligence</h1>
+          <p className="text-slate-500 text-sm mt-0.5 dark:text-slate-400">Stock aging, movement classification, and reorder analytics</p>
         </div>
         <div className="flex items-center gap-2">
           <Link href={`${base}/inventory`}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-xl transition">
+            className="flex items-center gap-2 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-xl transition dark:text-blue-400 dark:hover:bg-blue-950">
             <Package className="w-4 h-4" /> Inventory
           </Link>
-          <button onClick={load} className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition" title="Refresh">
+          <button onClick={load} className="p-2 text-slate-400 hover:bg-slate-100 rounded-xl transition dark:text-slate-500 dark:hover:bg-slate-800" title="Refresh">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
@@ -141,13 +141,13 @@ export default function InventoryIntelligenceClient() {
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Aging chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-          <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-slate-500" />
+        <div className="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+          <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2 dark:text-white">
+            <Clock className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             Inventory Aging by Age Bucket
           </h3>
           {loading ? (
-            <div className="h-48 bg-slate-50 rounded-xl animate-pulse" />
+            <div className="h-48 bg-slate-50 rounded-xl animate-pulse dark:bg-slate-800" />
           ) : (
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={ageBucketCounts} barSize={40}>
@@ -172,47 +172,47 @@ export default function InventoryIntelligenceClient() {
             {ageBucketCounts.map(({ bucket, count, value }) => (
               <div key={bucket} className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: AGE_COLORS[bucket] }} />
-                <span className="text-xs text-slate-600">{bucket}d: {count} ({formatCurrency(value)})</span>
+                <span className="text-xs text-slate-600 dark:text-slate-300">{bucket}d: {count} ({formatCurrency(value)})</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Reorder suggestions */}
-        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+        <div className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-              <ShoppingBag className="w-4 h-4 text-blue-500" />
+            <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2 dark:text-white">
+              <ShoppingBag className="w-4 h-4 text-blue-500 dark:text-blue-400" />
               Reorder Suggestions
             </h3>
             {reorderNeeded.length > 0 && (
-              <Link href={`${base}/procurement`} className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+              <Link href={`${base}/procurement`} className="text-xs text-blue-600 hover:underline flex items-center gap-1 dark:text-blue-400">
                 Create PO <ArrowUpRight className="w-3 h-3" />
               </Link>
             )}
           </div>
           {loading ? (
             <div className="space-y-2">
-              {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-8 bg-slate-100 rounded-lg animate-pulse" />)}
+              {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-8 bg-slate-100 rounded-lg animate-pulse dark:bg-slate-800" />)}
             </div>
           ) : reorderNeeded.length === 0 ? (
-            <p className="text-xs text-slate-400 text-center py-8">Stock levels are healthy</p>
+            <p className="text-xs text-slate-400 text-center py-8 dark:text-slate-500">Stock levels are healthy</p>
           ) : (
             <div className="space-y-1.5">
               {reorderNeeded.slice(0, 8).map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50">
+                <div key={item.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-medium text-slate-700 truncate">{item.name}</p>
-                    <p className="text-xs text-slate-400">{item.supplier_name ?? 'No supplier'}</p>
+                    <p className="text-xs font-medium text-slate-700 truncate dark:text-slate-200">{item.name}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{item.supplier_name ?? 'No supplier'}</p>
                   </div>
                   <div className="text-right ml-2 flex-shrink-0">
-                    <p className="text-xs font-bold text-red-600">{item.quantity} left</p>
-                    <p className="text-xs text-slate-400">Reorder: {item.reorder_quantity || item.low_stock_threshold}</p>
+                    <p className="text-xs font-bold text-red-600 dark:text-red-400">{item.quantity} left</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">Reorder: {item.reorder_quantity || item.low_stock_threshold}</p>
                   </div>
                 </div>
               ))}
               {reorderNeeded.length > 8 && (
-                <p className="text-xs text-center text-slate-400 pt-1">+{reorderNeeded.length - 8} more</p>
+                <p className="text-xs text-center text-slate-400 pt-1 dark:text-slate-500">+{reorderNeeded.length - 8} more</p>
               )}
             </div>
           )}
@@ -220,15 +220,15 @@ export default function InventoryIntelligenceClient() {
       </div>
 
       {/* Stock table */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 flex-wrap">
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 flex-wrap dark:border-slate-800">
           <div className="relative flex-1 min-w-48">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search products…"
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white" />
           </div>
-          <div className="flex rounded-xl border border-slate-200 overflow-hidden">
+          <div className="flex rounded-xl border border-slate-200 overflow-hidden dark:border-slate-700">
             {([
               { id: 'all', label: 'All' },
               { id: 'fast', label: '⚡ Fast' },
@@ -238,7 +238,7 @@ export default function InventoryIntelligenceClient() {
             ] as const).map(({ id, label }) => (
               <button key={id} onClick={() => setClassFilter(id as ClassFilter)}
                 className={`px-3 py-2 text-xs font-medium transition ${
-                  classFilter === id ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  classFilter === id ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`}>
                 {label}
               </button>
@@ -249,7 +249,7 @@ export default function InventoryIntelligenceClient() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-slate-50 text-xs text-slate-500 uppercase">
+              <tr className="bg-slate-50 text-xs text-slate-500 uppercase dark:bg-slate-800 dark:text-slate-400">
                 <th className="text-left px-4 py-3">Product</th>
                 <th className="text-left px-4 py-3">Category</th>
                 <th className="text-left px-4 py-3">Supplier</th>
@@ -262,44 +262,44 @@ export default function InventoryIntelligenceClient() {
                 <th className="text-center px-4 py-3">Classification</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>{Array.from({ length: 10 }).map((_, j) => (
-                    <td key={j} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td>
+                    <td key={j} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse dark:bg-slate-800" /></td>
                   ))}</tr>
                 ))
               ) : displayed.length === 0 ? (
-                <tr><td colSpan={10} className="text-center py-16 text-slate-400">
+                <tr><td colSpan={10} className="text-center py-16 text-slate-400 dark:text-slate-500">
                   <TrendingDown className="w-10 h-10 mx-auto mb-2 opacity-40" />
                   <p>No products match this filter</p>
                 </td></tr>
               ) : (
                 displayed.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50 transition">
+                  <tr key={item.id} className="hover:bg-slate-50 transition dark:hover:bg-slate-800">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-slate-800">{item.name}</p>
-                      {item.sku && <p className="text-xs text-slate-400 font-mono">{item.sku}</p>}
+                      <p className="font-medium text-slate-800 dark:text-white">{item.name}</p>
+                      {item.sku && <p className="text-xs text-slate-400 font-mono dark:text-slate-500">{item.sku}</p>}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 text-xs">{item.category_name ?? '—'}</td>
-                    <td className="px-4 py-3 text-slate-600 text-xs">{item.supplier_name ?? '—'}</td>
+                    <td className="px-4 py-3 text-slate-600 text-xs dark:text-slate-300">{item.category_name ?? '—'}</td>
+                    <td className="px-4 py-3 text-slate-600 text-xs dark:text-slate-300">{item.supplier_name ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`font-bold ${item.quantity === 0 ? 'text-red-600' : item.quantity <= item.low_stock_threshold ? 'text-amber-600' : 'text-green-700'}`}>
+                      <span className={`font-bold ${item.quantity === 0 ? 'text-red-600 dark:text-red-400' : item.quantity <= item.low_stock_threshold ? 'text-amber-600 dark:text-amber-400' : 'text-green-700 dark:text-green-400'}`}>
                         {item.quantity}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-slate-700">{formatCurrency(item.stock_value)}</td>
-                    <td className="px-4 py-3 text-right text-slate-600 text-xs">{item.days_in_inventory ?? '—'}</td>
+                    <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-200">{formatCurrency(item.stock_value)}</td>
+                    <td className="px-4 py-3 text-right text-slate-600 text-xs dark:text-slate-300">{item.days_in_inventory ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
                       <span className={`text-xs font-medium ${
-                        (item.days_since_last_sale ?? 0) > 90 ? 'text-purple-700' :
-                        (item.days_since_last_sale ?? 0) > 60 ? 'text-red-600' :
-                        (item.days_since_last_sale ?? 0) > 30 ? 'text-amber-600' : 'text-green-600'
+                        (item.days_since_last_sale ?? 0) > 90 ? 'text-purple-700 dark:text-purple-400' :
+                        (item.days_since_last_sale ?? 0) > 60 ? 'text-red-600 dark:text-red-400' :
+                        (item.days_since_last_sale ?? 0) > 30 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'
                       }`}>
                         {item.days_since_last_sale != null ? `${item.days_since_last_sale}d` : 'Never'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-slate-700 font-semibold">{item.total_sold}</td>
+                    <td className="px-4 py-3 text-right text-slate-700 font-semibold dark:text-slate-200">{item.total_sold}</td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium`}
                         style={{ backgroundColor: AGE_COLORS[item.age_bucket] + '20', color: AGE_COLORS[item.age_bucket] }}>
@@ -317,7 +317,7 @@ export default function InventoryIntelligenceClient() {
         </div>
 
         {displayed.length > 0 && (
-          <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <div className="px-5 py-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
             <span>Showing {displayed.length} of {items.length} products</span>
             <span>Total value: {formatCurrency(displayed.reduce((s, i) => s + (i.stock_value ?? 0), 0))}</span>
           </div>
@@ -329,14 +329,14 @@ export default function InventoryIntelligenceClient() {
 
 function ClassBadge({ cls }: { cls: string }) {
   const map: Record<string, { label: string; className: string }> = {
-    fast:          { label: '⚡ Fast',      className: 'bg-green-100 text-green-700' },
-    normal:        { label: 'Normal',        className: 'bg-slate-100 text-slate-600' },
-    slow:          { label: '🐢 Slow',      className: 'bg-amber-100 text-amber-700' },
-    dead:          { label: '💀 Dead',      className: 'bg-red-100 text-red-700' },
-    overstock:     { label: '📦 Overstock', className: 'bg-purple-100 text-purple-700' },
-    out_of_stock:  { label: 'Out of Stock', className: 'bg-gray-100 text-gray-500' },
+    fast:          { label: '⚡ Fast',      className: 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400' },
+    normal:        { label: 'Normal',        className: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300' },
+    slow:          { label: '🐢 Slow',      className: 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400' },
+    dead:          { label: '💀 Dead',      className: 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400' },
+    overstock:     { label: '📦 Overstock', className: 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-400' },
+    out_of_stock:  { label: 'Out of Stock', className: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' },
   }
-  const cfg = map[cls] ?? { label: cls, className: 'bg-slate-100 text-slate-500' }
+  const cfg = map[cls] ?? { label: cls, className: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' }
   return (
     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cfg.className}`}>
       {cfg.label}
@@ -354,26 +354,26 @@ function KPICard({
   active?: boolean
 }) {
   const colorMap = {
-    blue:  { bg: 'bg-blue-50',   text: 'text-blue-600',   ring: 'ring-blue-300' },
-    green: { bg: 'bg-green-50',  text: 'text-green-600',  ring: 'ring-green-300' },
-    amber: { bg: 'bg-amber-50',  text: 'text-amber-600',  ring: 'ring-amber-300' },
-    red:   { bg: 'bg-red-50',    text: 'text-red-600',    ring: 'ring-red-300' },
+    blue:  { bg: 'bg-blue-50 dark:bg-blue-950',   text: 'text-blue-600 dark:text-blue-400',   ring: 'ring-blue-300' },
+    green: { bg: 'bg-green-50 dark:bg-green-950',  text: 'text-green-600 dark:text-green-400',  ring: 'ring-green-300' },
+    amber: { bg: 'bg-amber-50 dark:bg-amber-950',  text: 'text-amber-600 dark:text-amber-400',  ring: 'ring-amber-300' },
+    red:   { bg: 'bg-red-50 dark:bg-red-950',    text: 'text-red-600 dark:text-red-400',    ring: 'ring-red-300' },
   }
   const c = colorMap[color]
   const Wrapper = onClick ? 'button' : 'div'
   return (
     <Wrapper
       onClick={onClick}
-      className={`bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-left w-full transition ${
+      className={`bg-white rounded-2xl p-5 border border-slate-100 shadow-sm text-left w-full transition dark:bg-slate-900 dark:border-slate-800 ${
         onClick ? 'hover:shadow-md cursor-pointer' : ''
       } ${active ? `ring-2 ${c.ring}` : ''}`}
     >
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.bg} mb-3`}>
         <Icon className={`w-5 h-5 ${c.text}`} />
       </div>
-      <p className="text-2xl font-bold text-slate-800">{value}</p>
+      <p className="text-2xl font-bold text-slate-800 dark:text-white">{value}</p>
       <p className={`text-sm font-medium mt-0.5 ${c.text}`}>{label}</p>
-      <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
+      <p className="text-xs text-slate-400 mt-0.5 dark:text-slate-500">{sub}</p>
     </Wrapper>
   )
 }

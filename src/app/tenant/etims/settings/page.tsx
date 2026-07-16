@@ -1,4 +1,3 @@
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as adminClient } from '@supabase/supabase-js'
@@ -29,8 +28,7 @@ export default async function EtimsSettingsPage() {
   if (!profile?.tenant_id) redirect('/login')
   if (!['owner', 'manager', 'super_admin'].includes(profile.role)) redirect('/tenant/etims')
 
-  const headersList = await headers()
-  const tenantId    = headersList.get('x-tenant-id') || profile.tenant_id
+  const tenantId = profile.tenant_id
 
   const { data: settings } = await service
     .from('tenants_etims_settings')

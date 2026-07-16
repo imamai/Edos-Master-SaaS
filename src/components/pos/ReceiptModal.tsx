@@ -81,8 +81,9 @@ export default function ReceiptModal({ saleId, receiptNumber, tenantName, tenant
 
     saleItems.forEach((item) => {
       const prod = item.products as Record<string, string> | null
+      const itemName = (item.product_name as string | null) ?? prod?.name ?? 'Item'
       doc.setFontSize(8); doc.setFont('courier', 'bold'); doc.setTextColor(...dark)
-      doc.text(prod?.name ?? 'Item', 4, y); y += 4
+      doc.text(itemName, 4, y); y += 4
       const line = `  ${Number(item.quantity)} x ${formatCurrency(Number(item.unit_price))}`
       rowText(line, formatCurrency(Number(item.total_price)), 8)
       if (Number(item.discount_amount) > 0) { rowText('  Discount', `-${formatCurrency(Number(item.discount_amount))}`, 8, green) }
@@ -187,9 +188,10 @@ export default function ReceiptModal({ saleId, receiptNumber, tenantName, tenant
 
               {saleItems.map((item, i) => {
                 const prod = item.products as Record<string, string> | null
+                const itemName = (item.product_name as string | null) ?? prod?.name ?? 'Item'
                 return (
                   <div key={i} className="mb-1">
-                    <p className="font-bold">{prod?.name ?? 'Item'}</p>
+                    <p className="font-bold">{itemName}</p>
                     <div className="flex justify-between pl-2">
                       <span>{Number(item.quantity)} x {formatCurrency(Number(item.unit_price))}</span>
                       <span>{formatCurrency(Number(item.total_price))}</span>

@@ -8,9 +8,11 @@ export default async function TenantLayout({ children }: { children: React.React
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const loginUrl = process.env.NODE_ENV === 'development'
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'
+  const isDev = process.env.NODE_ENV === 'development'
+  const loginUrl = isDev
     ? 'http://localhost:3000/login'
-    : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'}/login`
+    : `https://${rootDomain}/login`
 
   if (!user) redirect(loginUrl)
 
@@ -30,6 +32,17 @@ export default async function TenantLayout({ children }: { children: React.React
 
   if (!tenant) redirect(loginUrl)
 
+  // The subdomain the request actually came in on (set by middleware.ts) must
+  // match the authenticated user's own tenant. Without this check, a session
+  // cookie issued on Tenant A's subdomain (Domain=.edos.co.ke) would silently
+  // render Tenant A's data while the browser shows Tenant B's subdomain/branding.
+  const requestTenantId = (await headers()).get('x-tenant-id')
+  if (requestTenantId && requestTenantId !== tenant.id) {
+    redirect(isDev
+      ? `http://${tenant.subdomain}.localhost:3000`
+      : `https://${tenant.subdomain}.${rootDomain}`)
+  }
+
   if (tenant.status === 'suspended') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-red-50">
@@ -42,7 +55,7 @@ export default async function TenantLayout({ children }: { children: React.React
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-slate-950 transition-colors">
       <TenantSidebar tenant={tenant} profile={profile} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TenantTopbar tenant={tenant} profile={profile} />

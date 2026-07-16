@@ -197,7 +197,7 @@ export default function ReportsClient() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Reports & Analytics</h1>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Reports & Analytics</h1>
         <ExportMenu
           columns={
             tab === 'sales' ? [
@@ -244,31 +244,31 @@ export default function ReportsClient() {
         />
       </div>
 
-      <div className="flex flex-wrap gap-3 bg-white rounded-2xl border border-slate-100 p-4">
-        <div className="flex rounded-xl border border-slate-200 overflow-hidden">
+      <div className="flex flex-wrap gap-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-4">
+        <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           {(['today', 'week', 'month', 'custom'] as Period[]).map((p) => (
             <button key={p} onClick={() => { setPeriod(p); updateDates(p) }}
-              className={`px-4 py-2 text-sm font-medium capitalize transition ${period === p ? 'bg-blue-600 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+              className={`px-4 py-2 text-sm font-medium capitalize transition ${period === p ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>
               {p}
             </button>
           ))}
         </div>
         {period === 'custom' && (
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-slate-400" />
+            <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <span className="text-slate-400">—</span>
+              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <span className="text-slate-400 dark:text-slate-500">—</span>
             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
         )}
       </div>
 
-      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1 w-fit">
         {tabs.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === t.key ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition ${tab === t.key ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'}`}>
             {t.label}
           </button>
         ))}
@@ -287,12 +287,12 @@ export default function ReportsClient() {
           </div>
 
           {/* Chart */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-5">
-            <h3 className="font-semibold text-slate-800 mb-4">Daily Revenue, Gross Profit & Net Profit</h3>
-            {loading ? <div className="h-64 bg-slate-100 rounded-xl animate-pulse" /> : (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5">
+            <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Daily Revenue, Gross Profit & Net Profit</h3>
+            {loading ? <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" /> : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:opacity-10" />
                   <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => new Date(d).toLocaleDateString('en-KE', { month: 'short', day: 'numeric' })} />
                   <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
                   <Tooltip formatter={(v) => formatCurrency(Number(v))} />
@@ -306,44 +306,44 @@ export default function ReportsClient() {
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden overflow-x-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
+                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
                   {['Date', 'Revenue', 'Txns', 'Cash', 'M-Pesa', 'Credit', 'Gross Profit', 'Expenses', 'Net Profit', 'Margin'].map((h) => (
-                    <th key={h} className={`${h === 'Date' ? 'text-left' : 'text-right'} px-4 py-3 text-xs font-semibold text-slate-500 uppercase whitespace-nowrap`}>{h}</th>
+                    <th key={h} className={`${h === 'Date' ? 'text-left' : 'text-right'} px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase whitespace-nowrap`}>{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {salesData.map((d) => (
-                  <tr key={d.date} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{formatDateOnly(d.date)}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-slate-800">{formatCurrency(d.revenue)}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{d.transactions}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(d.cash)}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(d.mpesa)}</td>
-                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(d.credit)}</td>
-                    <td className={`px-4 py-3 text-right font-medium ${d.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(d.grossProfit)}</td>
-                    <td className="px-4 py-3 text-right text-rose-600">{d.expenses > 0 ? formatCurrency(d.expenses) : <span className="text-slate-300">—</span>}</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${d.netProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{formatCurrency(d.netProfit)}</td>
-                    <td className="px-4 py-3 text-right text-slate-500 text-xs">{d.revenue > 0 ? `${((d.netProfit / d.revenue) * 100).toFixed(1)}%` : '—'}</td>
+                  <tr key={d.date} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-200 whitespace-nowrap">{formatDateOnly(d.date)}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-slate-800 dark:text-white">{formatCurrency(d.revenue)}</td>
+                    <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{d.transactions}</td>
+                    <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{formatCurrency(d.cash)}</td>
+                    <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{formatCurrency(d.mpesa)}</td>
+                    <td className="px-4 py-3 text-right text-orange-600 dark:text-orange-400">{formatCurrency(d.credit)}</td>
+                    <td className={`px-4 py-3 text-right font-medium ${d.grossProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(d.grossProfit)}</td>
+                    <td className="px-4 py-3 text-right text-rose-600 dark:text-rose-400">{d.expenses > 0 ? formatCurrency(d.expenses) : <span className="text-slate-300 dark:text-slate-600">—</span>}</td>
+                    <td className={`px-4 py-3 text-right font-semibold ${d.netProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(d.netProfit)}</td>
+                    <td className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 text-xs">{d.revenue > 0 ? `${((d.netProfit / d.revenue) * 100).toFixed(1)}%` : '—'}</td>
                   </tr>
                 ))}
               </tbody>
               {salesData.length > 0 && (
                 <tfoot>
-                  <tr className="border-t-2 border-slate-200 bg-slate-50 font-bold">
-                    <td className="px-4 py-3 text-slate-800">TOTAL</td>
-                    <td className="px-4 py-3 text-right text-blue-600">{formatCurrency(totalRevenue)}</td>
-                    <td className="px-4 py-3 text-right text-slate-800">{totalTransactions}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(salesData.reduce((s, d) => s + d.cash, 0))}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(salesData.reduce((s, d) => s + d.mpesa, 0))}</td>
-                    <td className="px-4 py-3 text-right text-orange-600">{formatCurrency(salesData.reduce((s, d) => s + d.credit, 0))}</td>
-                    <td className={`px-4 py-3 text-right ${totalGrossProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>{formatCurrency(totalGrossProfit)}</td>
-                    <td className="px-4 py-3 text-right text-rose-600">{formatCurrency(totalExpenses)}</td>
-                    <td className={`px-4 py-3 text-right ${totalNetProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{formatCurrency(totalNetProfit)}</td>
-                    <td className="px-4 py-3 text-right text-slate-500 text-xs">{netMargin.toFixed(1)}%</td>
+                  <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold">
+                    <td className="px-4 py-3 text-slate-800 dark:text-white">TOTAL</td>
+                    <td className="px-4 py-3 text-right text-blue-600 dark:text-blue-400">{formatCurrency(totalRevenue)}</td>
+                    <td className="px-4 py-3 text-right text-slate-800 dark:text-white">{totalTransactions}</td>
+                    <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{formatCurrency(salesData.reduce((s, d) => s + d.cash, 0))}</td>
+                    <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{formatCurrency(salesData.reduce((s, d) => s + d.mpesa, 0))}</td>
+                    <td className="px-4 py-3 text-right text-orange-600 dark:text-orange-400">{formatCurrency(salesData.reduce((s, d) => s + d.credit, 0))}</td>
+                    <td className={`px-4 py-3 text-right ${totalGrossProfit >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(totalGrossProfit)}</td>
+                    <td className="px-4 py-3 text-right text-rose-600 dark:text-rose-400">{formatCurrency(totalExpenses)}</td>
+                    <td className={`px-4 py-3 text-right ${totalNetProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(totalNetProfit)}</td>
+                    <td className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 text-xs">{netMargin.toFixed(1)}%</td>
                   </tr>
                 </tfoot>
               )}
@@ -354,12 +354,12 @@ export default function ReportsClient() {
 
       {tab === 'products' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-100 p-5">
-            <h3 className="font-semibold text-slate-800 mb-4">Top Products by Revenue</h3>
-            {loading ? <div className="h-64 bg-slate-100 rounded-xl animate-pulse" /> : (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5">
+            <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Top Products by Revenue</h3>
+            {loading ? <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" /> : (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={topProducts.slice(0, 10)} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" className="dark:opacity-10" />
                   <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
                   <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={120} />
                   <Tooltip formatter={(v) => formatCurrency(Number(v))} />
@@ -370,32 +370,32 @@ export default function ReportsClient() {
               </ResponsiveContainer>
             )}
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden overflow-x-auto">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">#</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Product</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Category</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Qty Sold</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Revenue</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Cost</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Profit</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Margin</th>
+                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">#</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Product</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Category</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Qty Sold</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Revenue</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Cost</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Profit</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Margin</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {topProducts.map((p, i) => (
-                  <tr key={i} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-400 font-medium">{i + 1}</td>
-                    <td className="px-4 py-3 font-medium text-slate-800">{p.name}</td>
-                    <td className="px-4 py-3 text-slate-500 text-xs">{p.category}</td>
-                    <td className="px-4 py-3 text-right text-slate-700">{p.qty}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-blue-600">{formatCurrency(p.revenue)}</td>
-                    <td className="px-4 py-3 text-right text-slate-500">{formatCurrency(p.cost)}</td>
-                    <td className={`px-4 py-3 text-right font-semibold ${p.profit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{formatCurrency(p.profit)}</td>
+                  <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-4 py-3 text-slate-400 dark:text-slate-500 font-medium">{i + 1}</td>
+                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-white">{p.name}</td>
+                    <td className="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs">{p.category}</td>
+                    <td className="px-4 py-3 text-right text-slate-700 dark:text-slate-200">{p.qty}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-blue-600 dark:text-blue-400">{formatCurrency(p.revenue)}</td>
+                    <td className="px-4 py-3 text-right text-slate-500 dark:text-slate-400">{formatCurrency(p.cost)}</td>
+                    <td className={`px-4 py-3 text-right font-semibold ${p.profit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{formatCurrency(p.profit)}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${p.margin >= 20 ? 'bg-emerald-50 text-emerald-700' : p.margin >= 10 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-700'}`}>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${p.margin >= 20 ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400' : p.margin >= 10 ? 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400' : 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-400'}`}>
                         {p.margin.toFixed(1)}%
                       </span>
                     </td>
@@ -409,8 +409,8 @@ export default function ReportsClient() {
 
       {tab === 'payments' && (
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-100 p-5">
-            <h3 className="font-semibold text-slate-800 mb-4">Payment Distribution</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5">
+            <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Payment Distribution</h3>
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
                 <Pie data={paymentMix} cx="50%" cy="50%" outerRadius={100} dataKey="value"
@@ -421,18 +421,18 @@ export default function ReportsClient() {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 p-5">
-            <h3 className="font-semibold text-slate-800 mb-4">Payment Summary</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5">
+            <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Payment Summary</h3>
             <div className="space-y-3">
               {paymentMix.map((p, i) => (
                 <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
-                    <span className="text-sm font-medium text-slate-700">{p.name}</span>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{p.name}</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-slate-800">{formatCurrency(p.value)}</p>
-                    <p className="text-xs text-slate-400">{p.count} transactions</p>
+                    <p className="text-sm font-bold text-slate-800 dark:text-white">{formatCurrency(p.value)}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{p.count} transactions</p>
                   </div>
                 </div>
               ))}
@@ -448,14 +448,14 @@ export default function ReportsClient() {
             <SummaryCard label="Categories" value={expensesBreakdown.length.toString()} color="slate" />
             <SummaryCard label="Entries" value={expensesBreakdown.reduce((s, e) => s + e.count, 0).toString()} color="amber" />
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 p-5">
-            <h3 className="font-semibold text-slate-800 mb-4">Expenses by Category</h3>
-            {loading ? <div className="h-64 bg-slate-100 rounded-xl animate-pulse" /> : expensesBreakdown.length === 0 ? (
-              <p className="text-slate-400 text-sm text-center py-12">No expenses recorded in this period.</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5">
+            <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Expenses by Category</h3>
+            {loading ? <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" /> : expensesBreakdown.length === 0 ? (
+              <p className="text-slate-400 dark:text-slate-500 text-sm text-center py-12">No expenses recorded in this period.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={expensesBreakdown} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:opacity-10" />
                   <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
                   <YAxis dataKey="category" type="category" tick={{ fontSize: 10 }} width={130} />
                   <Tooltip formatter={(v) => formatCurrency(Number(v))} />
@@ -464,23 +464,23 @@ export default function ReportsClient() {
               </ResponsiveContainer>
             )}
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Category</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Entries</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Amount</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">% of Total</th>
+                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Category</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Entries</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Amount</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">% of Total</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {expensesBreakdown.map((e, i) => (
-                  <tr key={i} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-slate-800">{e.category}</td>
-                    <td className="px-4 py-3 text-right text-slate-600">{e.count}</td>
-                    <td className="px-4 py-3 text-right font-semibold text-rose-600">{formatCurrency(e.amount)}</td>
-                    <td className="px-4 py-3 text-right text-slate-500 text-xs">
+                  <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <td className="px-4 py-3 font-medium text-slate-800 dark:text-white">{e.category}</td>
+                    <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{e.count}</td>
+                    <td className="px-4 py-3 text-right font-semibold text-rose-600 dark:text-rose-400">{formatCurrency(e.amount)}</td>
+                    <td className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 text-xs">
                       {totalExpensesBreakdown > 0 ? `${((e.amount / totalExpensesBreakdown) * 100).toFixed(1)}%` : '—'}
                     </td>
                   </tr>
@@ -488,11 +488,11 @@ export default function ReportsClient() {
               </tbody>
               {expensesBreakdown.length > 0 && (
                 <tfoot>
-                  <tr className="border-t-2 border-slate-200 bg-slate-50 font-bold">
-                    <td className="px-4 py-3 text-slate-800">TOTAL</td>
-                    <td className="px-4 py-3 text-right text-slate-800">{expensesBreakdown.reduce((s, e) => s + e.count, 0)}</td>
-                    <td className="px-4 py-3 text-right text-rose-600">{formatCurrency(totalExpensesBreakdown)}</td>
-                    <td className="px-4 py-3 text-right text-slate-500 text-xs">100%</td>
+                  <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 font-bold">
+                    <td className="px-4 py-3 text-slate-800 dark:text-white">TOTAL</td>
+                    <td className="px-4 py-3 text-right text-slate-800 dark:text-white">{expensesBreakdown.reduce((s, e) => s + e.count, 0)}</td>
+                    <td className="px-4 py-3 text-right text-rose-600 dark:text-rose-400">{formatCurrency(totalExpensesBreakdown)}</td>
+                    <td className="px-4 py-3 text-right text-slate-500 dark:text-slate-400 text-xs">100%</td>
                   </tr>
                 </tfoot>
               )}
@@ -503,41 +503,41 @@ export default function ReportsClient() {
 
       {tab === 'credit' && (
         <div className="space-y-4">
-          <div className="bg-red-50 rounded-2xl p-4 flex items-center gap-4">
+          <div className="bg-red-50 dark:bg-red-950 rounded-2xl p-4 flex items-center gap-4">
             <div className="text-center">
-              <p className="text-sm text-slate-500">Total Outstanding</p>
-              <p className="text-2xl font-bold text-red-600">{formatCurrency(totalCredit)}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Total Outstanding</p>
+              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(totalCredit)}</p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-slate-500">Customers with Balance</p>
-              <p className="text-2xl font-bold text-slate-800">{creditCustomers.length}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Customers with Balance</p>
+              <p className="text-2xl font-bold text-slate-800 dark:text-white">{creditCustomers.length}</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Customer</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Outstanding</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Credit Limit</th>
-                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Utilization</th>
+                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Customer</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Outstanding</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Credit Limit</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Utilization</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {creditCustomers.map((c, i) => {
                   const util = c.credit_limit > 0 ? (c.outstanding_balance / c.credit_limit) * 100 : 100
                   return (
-                    <tr key={i} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium text-slate-800">{c.name}</td>
-                      <td className="px-4 py-3 text-right font-bold text-red-600">{formatCurrency(c.outstanding_balance)}</td>
-                      <td className="px-4 py-3 text-right text-slate-600">{formatCurrency(c.credit_limit)}</td>
+                    <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                      <td className="px-4 py-3 font-medium text-slate-800 dark:text-white">{c.name}</td>
+                      <td className="px-4 py-3 text-right font-bold text-red-600 dark:text-red-400">{formatCurrency(c.outstanding_balance)}</td>
+                      <td className="px-4 py-3 text-right text-slate-600 dark:text-slate-300">{formatCurrency(c.credit_limit)}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div className="w-16 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                             <div className={`h-full rounded-full ${util > 90 ? 'bg-red-500' : util > 60 ? 'bg-amber-500' : 'bg-green-500'}`}
                               style={{ width: `${Math.min(100, util)}%` }} />
                           </div>
-                          <span className={`text-xs font-medium ${util > 90 ? 'text-red-600' : 'text-slate-600'}`}>{util.toFixed(0)}%</span>
+                          <span className={`text-xs font-medium ${util > 90 ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-slate-300'}`}>{util.toFixed(0)}%</span>
                         </div>
                       </td>
                     </tr>
@@ -557,14 +557,14 @@ function SummaryCard({ label, value, color }: {
   color: 'blue' | 'green' | 'slate' | 'purple' | 'emerald' | 'amber' | 'rose' | 'red'
 }) {
   const colors = {
-    blue: 'text-blue-600 bg-blue-50',
-    green: 'text-green-600 bg-green-50',
-    slate: 'text-slate-600 bg-slate-100',
-    purple: 'text-purple-600 bg-purple-50',
-    emerald: 'text-emerald-600 bg-emerald-50',
-    amber: 'text-amber-600 bg-amber-50',
-    rose: 'text-rose-600 bg-rose-50',
-    red: 'text-red-600 bg-red-50',
+    blue: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950',
+    green: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950',
+    slate: 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800',
+    purple: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950',
+    emerald: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950',
+    amber: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950',
+    rose: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950',
+    red: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950',
   }
   return (
     <div className={`rounded-2xl p-4 ${colors[color]}`}>

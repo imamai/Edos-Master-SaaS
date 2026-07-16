@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { querySTKStatus } from '@/lib/mpesa'
+import { createClient } from '@/lib/supabase/server'
 import { createClient as adminClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/types'
 import type { MpesaCredentials } from '@/lib/mpesa'
@@ -40,18 +41,36 @@ function parseResultCode(resultCode: string | number | undefined): 'completed' |
 }
 
 export async function POST(req: NextRequest) {
-  const { checkoutRequestId, tenantId } = await req.json()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
-  if (!checkoutRequestId || !tenantId) {
-    return NextResponse.json({ message: 'Missing checkoutRequestId or tenantId' }, { status: 400 })
+  if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+
+  const { checkoutRequestId } = await req.json()
+
+  if (!checkoutRequestId) {
+    return NextResponse.json({ message: 'Missing checkoutRequestId' }, { status: 400 })
   }
 
-  // 1. Check DB first — webhook may have already resolved it
+  const { data: profile } = await supabaseAdmin
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single()
+
+  const tenantId = profile?.tenant_id
+  if (!tenantId) {
+    return NextResponse.json({ message: 'No tenant associated with this account' }, { status: 400 })
+  }
+
+  // 1. Check DB first — webhook may have already resolved it. Scope to the
+  // caller's own tenant so a checkoutRequestId from another tenant can't be probed.
   try {
     const { data: txn } = await supabaseAdmin
       .from('mpesa_transactions')
       .select('status, result_code, result_desc, mpesa_receipt')
       .eq('checkout_request_id', checkoutRequestId)
+      .eq('tenant_id', tenantId)
       .single()
 
     if (txn && txn.status !== 'pending') {
@@ -91,6 +110,7 @@ export async function POST(req: NextRequest) {
           result_desc: daraja.ResultDesc,
         })
         .eq('checkout_request_id', checkoutRequestId)
+        .eq('tenant_id', tenantId)
     }
 
     return NextResponse.json({ status, message: daraja.ResultDesc })

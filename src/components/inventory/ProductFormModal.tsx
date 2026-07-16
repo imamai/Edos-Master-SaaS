@@ -4,14 +4,15 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { generateSKU } from '@/lib/utils'
 import toast from 'react-hot-toast'
-import { X, Loader2 } from 'lucide-react'
+import { X, Loader2, ImageIcon, Upload, Trash2 } from 'lucide-react'
 
 interface Category { id: string; name: string }
 interface Product {
   id: string; name: string; sku: string | null; barcode: string | null
   category_id: string | null; unit: string; cost_price: number
-  selling_price: number; vat_rate: number; reorder_level: number
+  selling_price: number; wholesale_price?: number | null; vat_rate: number; reorder_level: number
   description: string | null; has_serial?: boolean; has_warranty?: boolean; warranty_months?: number
+  image_url?: string | null
 }
 
 interface Props {
@@ -23,12 +24,12 @@ interface Props {
   onSaved: () => void
 }
 
-const ic = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500'
+const ic = 'w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-1.5">{label}</label>
       {children}
     </div>
   )
@@ -37,6 +38,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export default function ProductFormModal({ product, categories, tenantId, branchId, onClose, onSaved }: Props) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
+  const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url ?? null)
+  const [imageUploading, setImageUploading] = useState(false)
+  const [imageSlot] = useState(() => product?.id ?? crypto.randomUUID())
   const [form, setForm] = useState({
     sku: product?.sku ?? '',
     barcode: product?.barcode ?? '',
@@ -46,6 +50,7 @@ export default function ProductFormModal({ product, categories, tenantId, branch
     unit: product?.unit ?? 'piece',
     cost_price: product?.cost_price ?? 0,
     selling_price: product?.selling_price ?? 0,
+    wholesale_price: product?.wholesale_price ?? '',
     vat_rate: product?.vat_rate ?? 16,
     reorder_level: product?.reorder_level ?? 5,
     has_serial: product?.has_serial ?? false,
@@ -65,18 +70,47 @@ export default function ProductFormModal({ product, categories, tenantId, branch
     setForm((f) => ({ ...f, [key]: value }))
   }
 
+  async function handleImageFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast.error('Image must be under 2 MB'); return }
+
+    setImageUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `${tenantId}/${imageSlot}.${ext}`
+
+    const { error: uploadError } = await supabase.storage.from('products').upload(path, file, { upsert: true })
+    if (uploadError) { toast.error(uploadError.message); setImageUploading(false); return }
+
+    const { data: urlData } = supabase.storage.from('products').getPublicUrl(path)
+    setImageUrl(`${urlData.publicUrl}?t=${Date.now()}`)
+    setImageUploading(false)
+  }
+
+  function handleRemoveImage() {
+    setImageUrl(null)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const db = supabase as any
+    // products has two separate reorder-threshold columns (reorder_level and
+    // low_stock_threshold) left over from schema drift — product_stock's
+    // low-stock calculation reads reorder_level, so both must be kept in
+    // sync or the low-stock badge silently stops matching what was saved.
+    const { reorder_level, ...formRest } = form
     const payload = {
-      ...form,
+      ...formRest,
       tenant_id: tenantId,
+      image_url: imageUrl,
       cost_price: Number(form.cost_price),
       selling_price: Number(form.selling_price),
+      wholesale_price: form.wholesale_price === '' ? null : Number(form.wholesale_price),
       vat_rate: Number(form.vat_rate),
-      reorder_level: Number(form.reorder_level),
+      reorder_level: Number(reorder_level),
+      low_stock_threshold: Number(reorder_level),
       warranty_months: form.has_warranty ? Number(form.warranty_months) : null,
     }
 
@@ -101,10 +135,10 @@ export default function ProductFormModal({ product, categories, tenantId, branch
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-800 text-lg">{product ? 'Edit Product' : 'Add New Product'}</h3>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100"><X className="w-5 h-5 text-slate-400" /></button>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-bold text-slate-800 dark:text-white text-lg">{product ? 'Edit Product' : 'Add New Product'}</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"><X className="w-5 h-5 text-slate-400 dark:text-slate-500" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -136,24 +170,48 @@ export default function ProductFormModal({ product, categories, tenantId, branch
             <Field label="Buying Price (KES) *">
               <input required type="number" min={0} step={0.01} value={form.cost_price} onChange={(e) => update('cost_price', e.target.value)} className={ic} />
             </Field>
-            <Field label="Selling Price (KES) *">
+            <Field label="Retail Price (KES) *">
               <input required type="number" min={0} step={0.01} value={form.selling_price} onChange={(e) => update('selling_price', e.target.value)} className={ic} />
+            </Field>
+            <Field label="Wholesale Price (KES)">
+              <input type="number" min={0} step={0.01} value={form.wholesale_price} onChange={(e) => update('wholesale_price', e.target.value)} className={ic} placeholder="Optional — leave blank to use retail price" />
             </Field>
             <Field label="VAT Rate (%)">
               <input type="number" min={0} max={100} value={form.vat_rate} onChange={(e) => update('vat_rate', e.target.value)} className={ic} />
             </Field>
           </div>
+          <Field label="Product Photo">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {imageUrl
+                  ? <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+                  : <ImageIcon className="w-7 h-7 text-slate-300 dark:text-slate-600" />}
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer transition">
+                  {imageUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  {imageUploading ? 'Uploading…' : imageUrl ? 'Replace Photo' : 'Upload Photo'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleImageFile} disabled={imageUploading} />
+                </label>
+                {imageUrl && (
+                  <button type="button" onClick={handleRemoveImage} className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition" title="Remove photo">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </Field>
           <Field label="Description">
             <textarea value={form.description ?? ''} onChange={(e) => update('description', e.target.value)} rows={2} className={ic} placeholder="Optional product description" />
           </Field>
           <div className="flex flex-wrap gap-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.has_serial} onChange={(e) => update('has_serial', e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
-              <span className="text-sm text-slate-700">Track Serial Numbers</span>
+              <span className="text-sm text-slate-700 dark:text-slate-200">Track Serial Numbers</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.has_warranty} onChange={(e) => update('has_warranty', e.target.checked)} className="w-4 h-4 text-blue-600 rounded" />
-              <span className="text-sm text-slate-700">Has Warranty</span>
+              <span className="text-sm text-slate-700 dark:text-slate-200">Has Warranty</span>
             </label>
           </div>
           {form.has_warranty && (
@@ -162,7 +220,7 @@ export default function ProductFormModal({ product, categories, tenantId, branch
             </Field>
           )}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition flex items-center justify-center gap-2">
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {product ? 'Save Changes' : 'Create Product'}

@@ -53,8 +53,8 @@ export default function DashboardClient({ stats, chartData, lowStock, recentSale
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Overview of your business today</p>
+          <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Dashboard</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Overview of your business today</p>
         </div>
         <Link
           href={base || '/'}
@@ -82,8 +82,8 @@ export default function DashboardClient({ stats, chartData, lowStock, recentSale
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-          <h3 className="font-semibold text-slate-800 mb-4">Revenue — Last 7 Days</h3>
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Revenue — Last 7 Days</h3>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={chartData}>
               <defs>
@@ -92,7 +92,7 @@ export default function DashboardClient({ stats, chartData, lowStock, recentSale
                   <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" className="dark:opacity-10" />
               <XAxis dataKey="date" tick={{ fontSize: 12 }} />
               <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} />
@@ -101,8 +101,8 @@ export default function DashboardClient({ stats, chartData, lowStock, recentSale
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-          <h3 className="font-semibold text-slate-800 mb-4">Payment Mix Today</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <h3 className="font-semibold text-slate-800 dark:text-white mb-4">Payment Mix Today</h3>
           {paymentData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -116,38 +116,38 @@ export default function DashboardClient({ stats, chartData, lowStock, recentSale
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[220px] flex items-center justify-center text-slate-400 text-sm">No sales today yet</div>
+            <div className="h-[220px] flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm">No sales today yet</div>
           )}
         </div>
       </div>
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <h3 className="font-semibold text-slate-800">Recent Sales</h3>
-            <Link href={`${base}/sales`} className="text-xs text-blue-600 hover:underline">View all</Link>
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 className="font-semibold text-slate-800 dark:text-white">Recent Sales</h3>
+            <Link href={`${base}/sales`} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">View all</Link>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {recentSales.length === 0 ? (
-              <p className="text-center text-slate-400 text-sm py-8">No sales yet today</p>
+              <p className="text-center text-slate-400 dark:text-slate-500 text-sm py-8">No sales yet today</p>
             ) : (
               recentSales.map((sale) => (
                 <div key={sale.id} className="flex items-center justify-between px-5 py-3">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{sale.receipt_number}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-sm font-medium text-slate-800 dark:text-white">{sale.receipt_number}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {sale.customers?.name ?? 'Walk-in'} &middot;{' '}
                       {new Date(sale.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-slate-800">{formatCurrency(sale.total_amount)}</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white">{formatCurrency(sale.total_amount)}</p>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      sale.payment_method === 'mpesa' ? 'bg-green-100 text-green-700' :
-                      sale.payment_method === 'cash' ? 'bg-blue-100 text-blue-700' :
-                      sale.payment_method === 'credit' ? 'bg-orange-100 text-orange-700' :
-                      'bg-slate-100 text-slate-600'
+                      sale.payment_method === 'mpesa' ? 'bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400' :
+                      sale.payment_method === 'cash' ? 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400' :
+                      sale.payment_method === 'credit' ? 'bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-400' :
+                      'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
                     }`}>
                       {sale.payment_method.toUpperCase()}
                     </span>
@@ -159,25 +159,25 @@ export default function DashboardClient({ stats, chartData, lowStock, recentSale
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-              <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-semibold text-slate-800 dark:text-white text-sm flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-amber-500" />
                 Low Stock
               </h3>
-              <Link href={`${base}/inventory`} className="text-xs text-blue-600 hover:underline">Manage</Link>
+              <Link href={`${base}/inventory`} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Manage</Link>
             </div>
             <div className="p-2 space-y-1">
               {lowStock.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-3">All stock levels OK</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-3">All stock levels OK</p>
               ) : (
                 lowStock.slice(0, 5).map((item) => (
-                  <div key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-50">
+                  <div key={item.id} className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
                     <div>
-                      <p className="text-xs font-medium text-slate-700 truncate max-w-[130px]">{item.name}</p>
-                      <p className="text-xs text-slate-400">{item.category_name}</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate max-w-[130px]">{item.name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{item.category_name}</p>
                     </div>
-                    <span className="text-xs font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950 px-2 py-0.5 rounded-full">
                       {item.stock_quantity}
                     </span>
                   </div>
@@ -186,27 +186,27 @@ export default function DashboardClient({ stats, chartData, lowStock, recentSale
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
-            <div className="px-4 py-3 border-b border-slate-100">
-              <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">
+            <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-semibold text-slate-800 dark:text-white text-sm flex items-center gap-2">
                 <Package className="w-4 h-4 text-blue-500" />
                 Top Products (Month)
               </h3>
             </div>
             <div className="p-2 space-y-1">
               {topProducts.length === 0 ? (
-                <p className="text-xs text-slate-400 text-center py-3">No sales this month</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-3">No sales this month</p>
               ) : (
                 topProducts.map((p, i) => (
                   <div key={p.id} className="flex items-center gap-3 px-2 py-1.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center flex-shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center justify-center flex-shrink-0">
                       {i + 1}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-medium text-slate-700 truncate">{p.name}</p>
-                      <p className="text-xs text-slate-400">{p.category}</p>
+                      <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{p.name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{p.category}</p>
                     </div>
-                    <span className="text-xs font-semibold text-slate-600">{p.qty} sold</span>
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{p.qty} sold</span>
                   </div>
                 ))
               )}
@@ -225,26 +225,26 @@ function StatCard({ label, value, sub, icon: Icon, color, href }: {
   href?: string
 }) {
   const colors = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    purple: 'bg-purple-50 text-purple-600',
-    red: 'bg-red-50 text-red-600',
-    orange: 'bg-orange-50 text-orange-600',
+    blue: 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400',
+    green: 'bg-green-50 dark:bg-green-950 text-green-600 dark:text-green-400',
+    purple: 'bg-purple-50 dark:bg-purple-950 text-purple-600 dark:text-purple-400',
+    red: 'bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400',
+    orange: 'bg-orange-50 dark:bg-orange-950 text-orange-600 dark:text-orange-400',
   }
   const inner = (
     <>
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colors[color]} mb-3`}>
         <Icon className="w-5 h-5" />
       </div>
-      <p className="text-2xl font-bold text-slate-800">{value}</p>
-      <p className="text-sm font-medium text-slate-600 mt-0.5">{label}</p>
-      <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
+      <p className="text-2xl font-bold text-slate-800 dark:text-white">{value}</p>
+      <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mt-0.5">{label}</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{sub}</p>
     </>
   )
   if (href) {
-    return <Link href={href} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 hover:shadow-md transition block">{inner}</Link>
+    return <Link href={href} className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 hover:shadow-md transition block">{inner}</Link>
   }
-  return <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">{inner}</div>
+  return <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800 transition-colors">{inner}</div>
 }
 
 function MiniStat({ label, value, icon: Icon, color }: {
@@ -253,18 +253,18 @@ function MiniStat({ label, value, icon: Icon, color }: {
   color: 'blue' | 'green' | 'orange'
 }) {
   const colors = {
-    blue: 'text-blue-600 bg-blue-50',
-    green: 'text-green-600 bg-green-50',
-    orange: 'text-orange-600 bg-orange-50',
+    blue: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950',
+    green: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950',
+    orange: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950',
   }
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-3 transition-colors">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${colors[color]}`}>
         <Icon className="w-5 h-5" />
       </div>
       <div>
-        <p className="text-lg font-bold text-slate-800">{value}</p>
-        <p className="text-xs text-slate-500">{label}</p>
+        <p className="text-lg font-bold text-slate-800 dark:text-white">{value}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{label}</p>
       </div>
     </div>
   )

@@ -46,10 +46,21 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { phone, amount, saleId, tenantId } = await req.json()
+    const { phone, amount, saleId } = await req.json()
 
-    if (!phone || !amount || !tenantId) {
+    if (!phone || !amount) {
       return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
+    }
+
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single()
+
+    const tenantId = profile?.tenant_id
+    if (!tenantId) {
+      return NextResponse.json({ message: 'No tenant associated with this account' }, { status: 400 })
     }
 
     const credentials = await getTenantCredentials(tenantId)

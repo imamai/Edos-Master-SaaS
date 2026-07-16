@@ -15,7 +15,7 @@ export default function TenantTopbar({ tenant, profile }: Props) {
   const isGrace = tenant.status === 'grace_period'
 
   return (
-    <header className="h-14 border-b bg-white flex items-center px-4 gap-4 flex-shrink-0">
+    <header className="h-14 border-b border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center px-4 gap-4 flex-shrink-0 transition-colors">
       {/* Status banners */}
       {(isTrialing || isGrace) && (
         <div className={`flex-1 text-center text-xs font-medium px-3 py-1 rounded-full ${
@@ -40,7 +40,7 @@ export default function TenantTopbar({ tenant, profile }: Props) {
 
       <div className="flex-1" />
 
-      <div className="flex items-center gap-2 text-xs text-gray-500">
+      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <span className="hidden sm:inline">{new Date().toLocaleDateString('en-KE', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
       </div>
     </header>

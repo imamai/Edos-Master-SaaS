@@ -54,6 +54,7 @@ serve(async (req: Request) => {
         headers: {
           'Authorization': `Bearer ${serviceKey}`,
           'Content-Type':  'application/json',
+          'x-internal-secret': Deno.env.get('ETIMS_INTERNAL_SECRET') ?? '',
         },
         body: JSON.stringify({ saleId: item.sale_id, tenantId: item.tenant_id }),
       })

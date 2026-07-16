@@ -16,12 +16,30 @@ export async function POST(req: NextRequest) {
   const { data: { user: authUser } } = await user.auth.getUser()
   if (!authUser) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { saleId, tenantId } = await req.json() as { saleId: string; tenantId: string }
-  if (!saleId || !tenantId) {
-    return NextResponse.json({ error: 'saleId and tenantId required' }, { status: 400 })
+  const { saleId } = await req.json() as { saleId: string }
+  if (!saleId) {
+    return NextResponse.json({ error: 'saleId required' }, { status: 400 })
   }
 
   const supabase = serviceClient()
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', authUser.id)
+    .single()
+
+  if (!profile?.tenant_id) return NextResponse.json({ error: 'No tenant' }, { status: 403 })
+  const tenantId = profile.tenant_id
+
+  const { data: sale } = await supabase
+    .from('sales')
+    .select('id')
+    .eq('id', saleId)
+    .eq('tenant_id', tenantId)
+    .single()
+
+  if (!sale) return NextResponse.json({ error: 'Sale not found' }, { status: 404 })
 
   // Reset queue entry so it will be picked up immediately
   await supabase.from('etims_queue').upsert({

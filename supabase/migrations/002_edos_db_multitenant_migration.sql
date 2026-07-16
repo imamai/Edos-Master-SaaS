@@ -150,7 +150,21 @@ DROP POLICY IF EXISTS "tenant_update_own"         ON public.tenants;
 
 CREATE POLICY "super_admin_all_tenants" ON public.tenants FOR ALL    USING (public.is_super_admin());
 CREATE POLICY "tenant_read_own"         ON public.tenants FOR SELECT USING (id = public.current_tenant_id());
-CREATE POLICY "tenant_update_own"       ON public.tenants FOR UPDATE USING (id = public.current_tenant_id());
+-- Tenant self-service updates (business/receipt/tax settings) may not touch
+-- billing-controlled columns; those stay pinned to their current values so a
+-- tenant cannot self-reactivate, upgrade plans, or extend trials without
+-- going through Stripe/M-Pesa or a super_admin.
+CREATE POLICY "tenant_update_own"       ON public.tenants FOR UPDATE
+  USING (id = public.current_tenant_id())
+  WITH CHECK (
+    id = public.current_tenant_id()
+    AND status                = (SELECT t.status                FROM public.tenants t WHERE t.id = public.current_tenant_id())
+    AND plan_id       IS NOT DISTINCT FROM (SELECT t.plan_id       FROM public.tenants t WHERE t.id = public.current_tenant_id())
+    AND trial_ends_at IS NOT DISTINCT FROM (SELECT t.trial_ends_at FROM public.tenants t WHERE t.id = public.current_tenant_id())
+    AND grace_period_ends_at IS NOT DISTINCT FROM (SELECT t.grace_period_ends_at FROM public.tenants t WHERE t.id = public.current_tenant_id())
+    AND stripe_customer_id   IS NOT DISTINCT FROM (SELECT t.stripe_customer_id   FROM public.tenants t WHERE t.id = public.current_tenant_id())
+    AND payment_failure_count = (SELECT t.payment_failure_count FROM public.tenants t WHERE t.id = public.current_tenant_id())
+  );
 
 CREATE OR REPLACE TRIGGER set_tenants_updated_at
   BEFORE UPDATE ON public.tenants
@@ -387,8 +401,30 @@ CREATE POLICY "tenant_branches" ON public.branches FOR ALL
   USING (tenant_id = public.current_tenant_id() OR public.is_super_admin());
 
 -- profiles
+-- WITH CHECK is required: without it Postgres reuses the USING expression,
+-- which any authenticated user satisfies for their own row (id = auth.uid()),
+-- letting them set role/tenant_id to anything (e.g. self-promote to
+-- super_admin, or jump to another tenant). Self-updates must keep role and
+-- tenant_id unchanged; only super_admin or an owner/manager acting on a
+-- different profile within their own tenant may change those columns.
 CREATE POLICY "tenant_profiles" ON public.profiles FOR ALL
-  USING (tenant_id = public.current_tenant_id() OR public.is_super_admin() OR id = auth.uid());
+  USING (tenant_id = public.current_tenant_id() OR public.is_super_admin() OR id = auth.uid())
+  WITH CHECK (
+    public.is_super_admin()
+    OR (
+      tenant_id = public.current_tenant_id()
+      AND id <> auth.uid()
+      AND EXISTS (
+        SELECT 1 FROM public.profiles me
+        WHERE me.id = auth.uid() AND me.role IN ('owner', 'manager')
+      )
+    )
+    OR (
+      id = auth.uid()
+      AND role      = (SELECT p.role      FROM public.profiles p WHERE p.id = auth.uid())
+      AND tenant_id IS NOT DISTINCT FROM (SELECT p.tenant_id FROM public.profiles p WHERE p.id = auth.uid())
+    )
+  );
 
 -- categories
 CREATE POLICY "tenant_categories" ON public.categories FOR ALL

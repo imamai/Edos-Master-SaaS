@@ -356,7 +356,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2.5 text-sm font-medium rounded-t-lg border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === tab ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-900'
+              activeTab === tab ? 'border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
             }`}
           >
             {tab}
@@ -369,14 +369,14 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
         <form onSubmit={handleSubmit(onSaveBusiness)} className="space-y-5 max-w-lg">
           {/* Logo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Business Logo</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Business Logo</label>
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+              <div className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-300 dark:border-slate-700 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-slate-800">
                 {logoPreview ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-1" />
                 ) : (
-                  <ImageIcon className="w-8 h-8 text-gray-300" />
+                  <ImageIcon className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                 )}
               </div>
               <div className="flex flex-col gap-2">
@@ -384,95 +384,95 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={logoUploading}
-                  className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
+                  className="flex items-center gap-2 px-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50"
                 >
                   {logoUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                   {logoUploading ? 'Uploading…' : 'Upload Logo'}
                 </button>
                 {logoPreview && (
                   <button type="button" onClick={handleRemoveLogo}
-                    className="text-xs text-red-500 hover:underline text-left">
+                    className="text-xs text-red-500 dark:text-red-400 hover:underline text-left">
                     Remove logo
                   </button>
                 )}
-                <p className="text-xs text-gray-400">PNG/JPG, max 2 MB</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">PNG/JPG, max 2 MB</p>
               </div>
             </div>
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoFile} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
-            <input {...register('name')} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Business Name</label>
+            <input {...register('name')} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-            <input {...register('phone')} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Phone</label>
+            <input {...register('phone')} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Business Address</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Business Address</label>
             <textarea {...register('address')} rows={2} placeholder="Street, City, Country"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-            <p className="text-xs text-gray-400 mt-1">Shown on receipts, invoices and quotations.</p>
+              className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Shown on receipts, invoices and quotations.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">KRA PIN</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">KRA PIN</label>
             <input {...register('kra_pin')} placeholder="e.g. P051234567A"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p className="text-xs text-gray-400 mt-1">Kenya Revenue Authority PIN — shown on tax invoices and quotations.</p>
+              className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Kenya Revenue Authority PIN — shown on tax invoices and quotations.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Brand Color</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Brand Color</label>
             <div className="flex items-center gap-3">
               <input {...register('primary_color')} type="color" className="w-10 h-10 rounded cursor-pointer border" />
-              <input {...register('primary_color')} className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="#2563EB" />
+              <input {...register('primary_color')} className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="#2563EB" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Header</label>
-            <textarea {...register('receipt_header')} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Receipt Header</label>
+            <textarea {...register('receipt_header')} rows={2} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Footer</label>
-            <textarea {...register('receipt_footer')} rows={2} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Receipt Footer</label>
+            <textarea {...register('receipt_footer')} rows={2} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
 
           <div className="border rounded-xl p-4 space-y-4">
-            <p className="text-sm font-semibold text-gray-700">Document Notes & Terms</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Document Notes & Terms</p>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Payment Instructions</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Payment Instructions</label>
               <textarea {...register('payment_instructions')} rows={2}
                 placeholder="e.g. Bank: KCB, Account: 1234567890, M-Pesa Till: 123456"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
-              <p className="text-xs text-gray-400 mt-1">Shown on invoices for customer payment reference.</p>
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Shown on invoices for customer payment reference.</p>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Quotation Notes</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Quotation Notes</label>
               <textarea {...register('quotation_notes')} rows={2}
                 placeholder="e.g. Prices valid for 14 days. Subject to stock availability."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Invoice Terms & Conditions</label>
+              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Invoice Terms & Conditions</label>
               <textarea {...register('invoice_terms')} rows={2}
                 placeholder="e.g. Goods once sold are not returnable without invoice within 7 days."
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
             </div>
           </div>
 
           <div className="border rounded-xl p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <input {...register('tax_enabled')} type="checkbox" id="tax" className="w-4 h-4 text-blue-600 rounded" />
-              <label htmlFor="tax" className="text-sm font-medium text-gray-700">Enable Tax</label>
+              <input {...register('tax_enabled')} type="checkbox" id="tax" className="w-4 h-4 text-blue-600 dark:text-blue-400 rounded" />
+              <label htmlFor="tax" className="text-sm font-medium text-gray-700 dark:text-gray-200">Enable Tax</label>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Tax Name</label>
-                <input {...register('tax_name')} placeholder="VAT" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tax Name</label>
+                <input {...register('tax_name')} placeholder="VAT" className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Tax Rate (%)</label>
-                <input {...register('tax_rate')} type="number" min="0" max="100" step="0.1" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tax Rate (%)</label>
+                <input {...register('tax_rate')} type="number" min="0" max="100" step="0.1" className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
           </div>
@@ -490,8 +490,8 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
         <div className="max-w-lg">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Product Categories</h2>
-              <p className="text-xs text-gray-500">Organise your inventory into categories</p>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Product Categories</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Organise your inventory into categories</p>
             </div>
             <button
               onClick={() => setShowAddCat(true)}
@@ -502,18 +502,18 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
           </div>
 
           {showAddCat && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 space-y-3">
-              <p className="text-sm font-medium text-blue-800">New Category</p>
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 space-y-3">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-400">New Category</p>
               <div className="flex gap-3">
                 <input
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   placeholder="Category name"
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onKeyDown={(e) => e.key === 'Enter' && addCategory()}
                 />
                 <div className="flex items-center gap-2">
-                  <Palette className="w-4 h-4 text-gray-400" />
+                  <Palette className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                   <input type="color" value={newCatColor} onChange={(e) => setNewCatColor(e.target.value)}
                     className="w-9 h-9 rounded border cursor-pointer" />
                 </div>
@@ -525,7 +525,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                   <Check className="w-3.5 h-3.5" /> Save
                 </button>
                 <button onClick={() => { setShowAddCat(false); setNewCatName(''); }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+                  className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-800">
                   Cancel
                 </button>
               </div>
@@ -534,55 +534,55 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
 
           {catsLoading ? (
             <div className="space-y-2">
-              {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />)}
+              {[1, 2, 3].map((i) => <div key={i} className="h-14 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}
             </div>
           ) : categories.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-gray-400 dark:text-gray-500">
               <Tag className="w-10 h-10 mx-auto mb-2 opacity-40" />
               <p className="text-sm">No categories yet. Add your first one.</p>
             </div>
           ) : (
             <div className="space-y-2">
               {categories.map((cat) => (
-                <div key={cat.id} className="flex items-center gap-3 bg-white border rounded-xl px-4 py-3">
+                <div key={cat.id} className="flex items-center gap-3 bg-white dark:bg-slate-900 border rounded-xl px-4 py-3">
                   <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
                   {editingCatId === cat.id ? (
                     <div className="flex flex-1 items-center gap-2">
                       <input
                         value={editCatName}
                         onChange={(e) => setEditCatName(e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onKeyDown={(e) => e.key === 'Enter' && saveEditCategory(cat.id)}
                         autoFocus
                       />
                       <input type="color" value={editCatColor} onChange={(e) => setEditCatColor(e.target.value)}
                         className="w-8 h-8 rounded border cursor-pointer" />
                       <button onClick={() => saveEditCategory(cat.id)}
-                        className="p-1.5 text-green-600 hover:bg-green-50 rounded-lg">
+                        className="p-1.5 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950 rounded-lg">
                         <Check className="w-4 h-4" />
                       </button>
                       <button onClick={() => setEditingCatId(null)}
-                        className="p-1.5 text-gray-400 hover:bg-gray-100 rounded-lg">
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
                     <>
-                      <span className={`flex-1 text-sm font-medium ${cat.is_active ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                      <span className={`flex-1 text-sm font-medium ${cat.is_active ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 line-through'}`}>
                         {cat.name}
                       </span>
-                      {!cat.is_active && <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Inactive</span>}
+                      {!cat.is_active && <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Inactive</span>}
                       <button onClick={() => { setEditingCatId(cat.id); setEditCatName(cat.name); setEditCatColor(cat.color) }}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition">
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => toggleCategory(cat.id, cat.is_active)}
-                        className={`p-1.5 rounded-lg transition ${cat.is_active ? 'text-gray-400 hover:text-amber-600 hover:bg-amber-50' : 'text-gray-400 hover:text-green-600 hover:bg-green-50'}`}
+                        className={`p-1.5 rounded-lg transition ${cat.is_active ? 'text-gray-400 dark:text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950' : 'text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-950'}`}
                         title={cat.is_active ? 'Deactivate' : 'Activate'}>
                         <Power className="w-3.5 h-3.5" />
                       </button>
                       <button onClick={() => deleteCategory(cat.id)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                        className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </>
@@ -599,8 +599,8 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
         <div className="max-w-2xl">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Staff Members</h2>
-              <p className="text-xs text-gray-500">{staff.length} member{staff.length !== 1 ? 's' : ''}</p>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Staff Members</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{staff.length} member{staff.length !== 1 ? 's' : ''}</p>
             </div>
             {canManageStaff && (
               <button onClick={() => setShowInvite(true)}
@@ -611,18 +611,18 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
           </div>
 
           {showInvite && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 space-y-3">
-              <p className="text-sm font-medium text-blue-800">Invite a team member</p>
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 space-y-3">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-400">Invite a team member</p>
               <div className="flex gap-3">
                 <input
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   type="email"
                   placeholder="Email address"
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize">
+                  className="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize">
                   {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
@@ -633,33 +633,33 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                   Send Invite
                 </button>
                 <button onClick={() => { setShowInvite(false); setInviteEmail('') }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+                  className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-800">
                   Cancel
                 </button>
               </div>
-              <p className="text-xs text-gray-500">The user will receive an email to set up their account and join your store.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">The user will receive an email to set up their account and join your store.</p>
             </div>
           )}
 
-          <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-gray-50 dark:bg-slate-800 border-b">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Staff</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  {canManageStaff && <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>}
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Staff</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Role</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                  {canManageStaff && <th className="px-4 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-slate-800">
                 {staff.map((p) => {
                   const isSelf = p.id === currentUserId
                   const isUpdating = updatingStaff === p.id
                   return (
-                    <tr key={p.id} className="hover:bg-gray-50">
+                    <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-slate-800">
                       <td className="px-4 py-3">
-                        <p className="text-sm font-medium text-gray-900">{p.full_name || p.email}</p>
-                        <p className="text-xs text-gray-400">{p.email}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{p.full_name || p.email}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{p.email}</p>
                       </td>
                       <td className="px-4 py-3">
                         {canManageStaff && !isSelf ? (
@@ -667,16 +667,16 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                             value={p.role}
                             onChange={(e) => updateStaffRole(p.id, e.target.value)}
                             disabled={isUpdating}
-                            className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 capitalize focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                            className="text-xs border border-gray-200 dark:border-slate-700 rounded-lg px-2 py-1 bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 capitalize focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                           >
                             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                           </select>
                         ) : (
-                          <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full capitalize">{p.role}</span>
+                          <span className="text-xs bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 px-2 py-0.5 rounded-full capitalize">{p.role}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${p.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${p.is_active ? 'bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'}`}>
                           {p.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </td>
@@ -688,8 +688,8 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                               disabled={isUpdating}
                               className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition disabled:opacity-40 ${
                                 p.is_active
-                                  ? 'text-red-600 hover:bg-red-50'
-                                  : 'text-green-600 hover:bg-green-50'
+                                  ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950'
+                                  : 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950'
                               }`}
                             >
                               {isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Power className="w-3 h-3" />}
@@ -714,7 +714,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
             {(['monthly', 'semiannual', 'yearly'] as const).map((cycle) => (
               <button key={cycle} onClick={() => setBillingCycle(cycle)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  billingCycle === cycle ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  billingCycle === cycle ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
                 }`}>
                 {cycle.charAt(0).toUpperCase() + cycle.slice(1)}
                 {cycle === 'yearly' && <span className="ml-1 text-xs opacity-75">Save 17%</span>}
@@ -728,25 +728,25 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
               const price = getPlanPrice(plan, billingCycle)
               const isCurrent = tenant.plan_id === plan.id
               return (
-                <div key={plan.id} className={`border-2 rounded-xl p-5 ${isCurrent ? 'border-blue-600' : 'border-gray-200'}`}>
+                <div key={plan.id} className={`border-2 rounded-xl p-5 ${isCurrent ? 'border-blue-600 dark:border-blue-500' : 'border-gray-200 dark:border-slate-700'}`}>
                   {isCurrent && (
-                    <div className="flex items-center gap-1 text-blue-600 text-xs font-medium mb-2">
+                    <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 text-xs font-medium mb-2">
                       <CheckCircle className="w-3.5 h-3.5" /> Current Plan
                     </div>
                   )}
-                  <h3 className="font-bold text-gray-900">{plan.name}</h3>
-                  <p className="text-2xl font-bold text-gray-900 mt-2">{formatCurrency(price)}</p>
-                  <p className="text-xs text-gray-500">/{billingCycle === 'monthly' ? 'month' : billingCycle === 'semiannual' ? '6 months' : 'year'}</p>
+                  <h3 className="font-bold text-gray-900 dark:text-white">{plan.name}</h3>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-2">{formatCurrency(price)}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">/{billingCycle === 'monthly' ? 'month' : billingCycle === 'semiannual' ? '6 months' : 'year'}</p>
                   <ul className="mt-4 space-y-1.5">
                     {(plan.features as string[]).slice(0, 5).map((f) => (
-                      <li key={f} className="text-xs text-gray-600 flex items-center gap-1.5">
+                      <li key={f} className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
                         <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" /> {f}
                       </li>
                     ))}
                   </ul>
                   {!isCurrent && (
                     <button onClick={() => handleSubscribe(plan)} disabled={checkoutLoading === plan.id}
-                      className="w-full mt-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50 disabled:opacity-50 flex items-center justify-center gap-2">
+                      className="w-full mt-4 py-2 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-950 disabled:opacity-50 flex items-center justify-center gap-2">
                       {checkoutLoading === plan.id && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                       <CreditCard className="w-3.5 h-3.5" />
                       Subscribe
@@ -763,15 +763,15 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
       {activeTab === 'Branches' && (
         <div className="space-y-3 max-w-lg">
           {branches.map((b) => (
-            <div key={b.id} className="bg-white rounded-xl border p-4">
+            <div key={b.id} className="bg-white dark:bg-slate-900 rounded-xl border p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">{b.name}</p>
-                  {b.address && <p className="text-sm text-gray-500">{[b.city, b.address].filter(Boolean).join(', ')}</p>}
+                  <p className="font-medium text-gray-900 dark:text-white">{b.name}</p>
+                  {b.address && <p className="text-sm text-gray-500 dark:text-gray-400">{[b.city, b.address].filter(Boolean).join(', ')}</p>}
                 </div>
                 <div className="flex items-center gap-2">
-                  {b.is_main && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Main</span>}
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${b.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {b.is_main && <span className="text-xs bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full">Main</span>}
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${b.is_active ? 'bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'}`}>
                     {b.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
@@ -783,23 +783,23 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
 
       {activeTab === 'M-Pesa' && (
         <div className="max-w-lg space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-            <p className="text-sm text-green-800 font-medium">Safaricom Daraja API Credentials</p>
-            <p className="text-xs text-green-700 mt-1">
+          <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-xl p-4">
+            <p className="text-sm text-green-800 dark:text-green-400 font-medium">Safaricom Daraja API Credentials</p>
+            <p className="text-xs text-green-700 dark:text-green-400 mt-1">
               Enter your own M-Pesa Daraja app credentials. Each account uses its own shortcode and keys.
               Get credentials at <span className="font-mono">developer.safaricom.co.ke</span>.
             </p>
           </div>
 
           {mpesaLoading ? (
-            <div className="flex items-center gap-2 text-gray-500 text-sm">
+            <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading settings…
             </div>
           ) : (
             <form onSubmit={saveMpesaSettings} className="space-y-5">
               {/* Environment toggle */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Environment</label>
                 <div className="flex gap-3">
                   {(['sandbox', 'production'] as const).map((env) => (
                     <label key={env} className="flex items-center gap-2 cursor-pointer">
@@ -812,40 +812,40 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                         disabled={!canManageMpesa}
                         className="accent-green-600"
                       />
-                      <span className={`text-sm capitalize ${env === 'production' ? 'text-green-700 font-medium' : 'text-gray-600'}`}>
+                      <span className={`text-sm capitalize ${env === 'production' ? 'text-green-700 dark:text-green-400 font-medium' : 'text-gray-600 dark:text-gray-300'}`}>
                         {env}
                       </span>
                     </label>
                   ))}
                 </div>
                 {mpesaSettings.environment === 'production' && (
-                  <p className="text-xs text-amber-600 mt-1">Live environment — real money transactions will occur.</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Live environment — real money transactions will occur.</p>
                 )}
               </div>
 
               {/* Active toggle */}
-              <div className="flex items-center justify-between bg-white border rounded-xl p-4">
+              <div className="flex items-center justify-between bg-white dark:bg-slate-900 border rounded-xl p-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-800">Enable M-Pesa</p>
-                  <p className="text-xs text-gray-500">Allow M-Pesa as a payment method at the POS</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-white">Enable M-Pesa</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Allow M-Pesa as a payment method at the POS</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => canManageMpesa && setMpesaSettings(s => ({ ...s, is_active: !s.is_active }))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${mpesaSettings.is_active ? 'bg-green-600' : 'bg-gray-300'} ${!canManageMpesa ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${mpesaSettings.is_active ? 'bg-green-600' : 'bg-gray-300 dark:bg-slate-700'} ${!canManageMpesa ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${mpesaSettings.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
               </div>
 
               {/* Credentials */}
-              <div className="bg-white border rounded-xl p-4 space-y-4">
+              <div className="bg-white dark:bg-slate-900 border rounded-xl p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-700">API Credentials</p>
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">API Credentials</p>
                   <button
                     type="button"
                     onClick={() => setShowMpesaSecrets(v => !v)}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     {showMpesaSecrets ? 'Hide' : 'Show'} secrets
                   </button>
@@ -853,81 +853,81 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Consumer Key</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Consumer Key</label>
                     <input
                       type={showMpesaSecrets ? 'text' : 'password'}
                       value={mpesaSettings.consumer_key}
                       onChange={e => setMpesaSettings(s => ({ ...s, consumer_key: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="Daraja app consumer key"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Consumer Secret</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Consumer Secret</label>
                     <input
                       type={showMpesaSecrets ? 'text' : 'password'}
                       value={mpesaSettings.consumer_secret}
                       onChange={e => setMpesaSettings(s => ({ ...s, consumer_secret: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="Daraja app consumer secret"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Business Shortcode</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Business Shortcode</label>
                     <input
                       type="text"
                       value={mpesaSettings.shortcode}
                       onChange={e => setMpesaSettings(s => ({ ...s, shortcode: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="e.g. 174379"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Passkey (Lipa Na M-Pesa)</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Passkey (Lipa Na M-Pesa)</label>
                     <input
                       type={showMpesaSecrets ? 'text' : 'password'}
                       value={mpesaSettings.passkey}
                       onChange={e => setMpesaSettings(s => ({ ...s, passkey: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="STK Push passkey"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Optional B2C / Refund fields */}
-              <details className="bg-white border rounded-xl">
-                <summary className="px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer select-none">
+              <details className="bg-white dark:bg-slate-900 border rounded-xl">
+                <summary className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 cursor-pointer select-none">
                   B2C / Refund credentials (optional)
                 </summary>
                 <div className="px-4 pb-4 space-y-4 border-t pt-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Initiator Name</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Initiator Name</label>
                     <input
                       type="text"
                       value={mpesaSettings.initiator_name}
                       onChange={e => setMpesaSettings(s => ({ ...s, initiator_name: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="B2C initiator name"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Security Credential</label>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Security Credential</label>
                     <input
                       type={showMpesaSecrets ? 'text' : 'password'}
                       value={mpesaSettings.security_credential}
                       onChange={e => setMpesaSettings(s => ({ ...s, security_credential: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="Encrypted security credential"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50"
+                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
                 </div>
@@ -943,7 +943,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                   {mpesaSaving ? 'Saving…' : 'Save M-Pesa Settings'}
                 </button>
               ) : (
-                <p className="text-xs text-gray-500">Only owners and managers can update M-Pesa settings.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Only owners and managers can update M-Pesa settings.</p>
               )}
             </form>
           )}

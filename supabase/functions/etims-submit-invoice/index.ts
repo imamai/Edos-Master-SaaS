@@ -34,6 +34,17 @@ serve(async (req: Request) => {
   }
 
   try {
+    // This function runs on the service-role client (RLS bypassed), so it
+    // must only be reachable from our own backend — the Supabase anon key is
+    // public, so JWT verification alone doesn't stop a stranger from calling
+    // this directly with an arbitrary {saleId, tenantId} pair.
+    const internalSecret = Deno.env.get('ETIMS_INTERNAL_SECRET')
+    if (!internalSecret || req.headers.get('x-internal-secret') !== internalSecret) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -79,6 +90,7 @@ serve(async (req: Request) => {
         .from('sales')
         .select('*, customers(name, phone), profiles!cashier_id(full_name), sale_items(*, products(name, sku, etims_item_cls_cd, etims_tax_type_cd))')
         .eq('id', saleId)
+        .eq('tenant_id', tenantId)
         .single(),
       supabase
         .from('tenants')

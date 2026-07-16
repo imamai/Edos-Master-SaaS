@@ -89,7 +89,12 @@ export async function initiateSTKPush(
     PartyA: phone,
     PartyB: credentials.shortcode,
     PhoneNumber: phone,
-    CallBackURL: params.callbackUrl || `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mpesa`,
+    // The token query param lets the webhook verify the callback actually came
+    // from this STK push request (see isAuthenticCallback in the webhook route) —
+    // it is never sent to the browser, unlike CheckoutRequestID.
+    CallBackURL:
+      params.callbackUrl ||
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/mpesa?token=${encodeURIComponent(process.env.MPESA_WEBHOOK_SECRET || '')}`,
     AccountReference: params.accountReference.substring(0, 12),
     TransactionDesc: params.transactionDesc.substring(0, 13),
   }

@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   unit TEXT NOT NULL DEFAULT 'pcs',
   cost_price NUMERIC(12,2) NOT NULL DEFAULT 0,
   selling_price NUMERIC(12,2) NOT NULL DEFAULT 0,
-  quantity INT NOT NULL DEFAULT 0,
+  quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
   low_stock_threshold INT NOT NULL DEFAULT 10,
   image_url TEXT,
   is_active BOOLEAN NOT NULL DEFAULT true,
@@ -700,11 +700,26 @@ CREATE POLICY "audit_service_insert" ON public.audit_logs
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.deduct_stock_on_sale()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_updated INT;
 BEGIN
   IF NEW.product_id IS NOT NULL THEN
     UPDATE public.products
     SET quantity = quantity - NEW.quantity
-    WHERE id = NEW.product_id AND tenant_id = NEW.tenant_id AND track_inventory = true;
+    WHERE id = NEW.product_id AND tenant_id = NEW.tenant_id AND track_inventory = true
+      AND quantity >= NEW.quantity;
+
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+
+    -- If no row was updated because stock was insufficient (not because the
+    -- product is untracked/missing), abort the sale so it can't oversell.
+    IF v_updated = 0 AND EXISTS (
+      SELECT 1 FROM public.products
+      WHERE id = NEW.product_id AND tenant_id = NEW.tenant_id AND track_inventory = true
+    ) THEN
+      RAISE EXCEPTION 'Insufficient stock for product %', NEW.product_id
+        USING ERRCODE = 'P0001';
+    END IF;
 
     INSERT INTO public.stock_adjustments (
       tenant_id, product_id, type, quantity,
@@ -797,11 +812,11 @@ CREATE POLICY "logos_public_read" ON storage.objects
 
 CREATE POLICY "logos_tenant_upload" ON storage.objects
   FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'logos');
+  WITH CHECK (bucket_id = 'logos' AND (storage.foldername(name))[1] = public.current_tenant_id()::text);
 
 CREATE POLICY "products_public_read" ON storage.objects
   FOR SELECT TO public USING (bucket_id = 'products');
 
 CREATE POLICY "products_tenant_upload" ON storage.objects
   FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'products');
+  WITH CHECK (bucket_id = 'products' AND (storage.foldername(name))[1] = public.current_tenant_id()::text);

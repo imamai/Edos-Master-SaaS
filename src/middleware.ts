@@ -36,7 +36,6 @@ export async function middleware(request: NextRequest) {
   // Passthrough for static assets and Next.js internals
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname.startsWith('/favicon') ||
     pathname.includes('.')
   ) {
@@ -50,6 +49,9 @@ export async function middleware(request: NextRequest) {
 
   // ── Admin subdomain ─────────────────────────────────────────
   if (subdomain === 'admin') {
+    if (pathname.startsWith('/api')) {
+      return updateSession(request)
+    }
     const url = request.nextUrl.clone()
     url.pathname = `/admin${pathname === '/' ? '' : pathname}`
     const response = NextResponse.rewrite(url)
@@ -57,7 +59,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── Tenant subdomain ────────────────────────────────────────
-  // Verify tenant exists and is not suspended
+  // Verify tenant exists and is not suspended (also applies to /api/* so a
+  // suspended tenant's still-valid session cookie can't be used to hit
+  // tenant-scoped API routes directly).
   const { supabase, response: sessionResponse } = createMiddlewareClient(request)
 
   const { data: tenant } = await supabase
@@ -67,6 +71,9 @@ export async function middleware(request: NextRequest) {
     .single()
 
   if (!tenant) {
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json({ message: 'Tenant not found' }, { status: 404 })
+    }
     const url = request.nextUrl.clone()
     url.hostname = ROOT_DOMAIN
     url.pathname = '/not-found'
@@ -75,11 +82,18 @@ export async function middleware(request: NextRequest) {
   }
 
   if (tenant.status === 'suspended') {
+    if (pathname.startsWith('/api')) {
+      return NextResponse.json({ message: 'This account has been suspended.' }, { status: 403 })
+    }
     const url = request.nextUrl.clone()
     url.pathname = `/suspended`
     url.hostname = ROOT_DOMAIN
     url.port = ''
     return NextResponse.redirect(url)
+  }
+
+  if (pathname.startsWith('/api')) {
+    return updateSession(request)
   }
 
   // Rewrite to /tenant/* internally

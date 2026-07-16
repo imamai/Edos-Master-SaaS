@@ -412,15 +412,27 @@ DECLARE
   v_grn   public.goods_received_notes%ROWTYPE;
   v_item  RECORD;
 BEGIN
-  SELECT * INTO v_grn FROM public.goods_received_notes WHERE id = p_grn_id;
+  -- Lock the GRN row so concurrent confirm calls serialize on it instead
+  -- of both observing status = 'draft' and double-applying stock.
+  SELECT * INTO v_grn FROM public.goods_received_notes WHERE id = p_grn_id FOR UPDATE;
 
   IF NOT FOUND THEN
     RAISE EXCEPTION 'GRN % not found', p_grn_id;
   END IF;
 
+  IF v_grn.tenant_id <> public.current_tenant_id() AND NOT public.is_super_admin() THEN
+    RAISE EXCEPTION 'Not authorized to confirm this GRN';
+  END IF;
+
   IF v_grn.status = 'confirmed' THEN
     RAISE EXCEPTION 'GRN already confirmed';
   END IF;
+
+  -- Flip status while still holding the row lock, before touching stock,
+  -- so a second waiting transaction sees 'confirmed' and aborts above.
+  UPDATE public.goods_received_notes
+    SET status = 'confirmed', confirmed_at = NOW()
+    WHERE id = p_grn_id;
 
   FOR v_item IN
     SELECT * FROM public.grn_items WHERE grn_id = p_grn_id AND received_qty > 0
@@ -451,10 +463,6 @@ BEGIN
     END IF;
   END LOOP;
 
-  UPDATE public.goods_received_notes
-    SET status = 'confirmed', confirmed_at = NOW()
-    WHERE id = p_grn_id;
-
   -- Reflect received quantities back on PO items
   UPDATE public.purchase_order_items poi
   SET received_quantity = received_quantity + gi.received_qty
@@ -462,6 +470,11 @@ BEGIN
   WHERE gi.po_item_id = poi.id AND gi.grn_id = p_grn_id;
 END;
 $$;
+
+-- Lock down the RPC surface: only authenticated tenant users may invoke it,
+-- and the tenant check inside the function enforces row-level ownership.
+REVOKE EXECUTE ON FUNCTION public.confirm_grn(UUID) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.confirm_grn(UUID) TO authenticated;
 
 -- ── PO / GRN Number Generators ────────────────────────────────
 CREATE OR REPLACE FUNCTION public.generate_po_number(p_tenant_id UUID)
