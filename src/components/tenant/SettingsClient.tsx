@@ -42,6 +42,7 @@ interface Props {
 }
 
 interface Category { id: string; name: string; color: string; is_active: boolean }
+interface ExpenseCategory { id: string; name: string; tenant_id: string | null }
 
 const ROLES = ['cashier', 'staff', 'manager', 'owner'] as const
 
@@ -68,6 +69,15 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
   const [editingCatId, setEditingCatId] = useState<string | null>(null)
   const [editCatName, setEditCatName] = useState('')
   const [editCatColor, setEditCatColor] = useState('')
+
+  // Expense categories state
+  const [expenseCategories, setExpenseCategories] = useState<ExpenseCategory[]>([])
+  const [expCatsLoading, setExpCatsLoading] = useState(false)
+  const [showAddExpCat, setShowAddExpCat] = useState(false)
+  const [newExpCatName, setNewExpCatName] = useState('')
+  const [savingExpCat, setSavingExpCat] = useState(false)
+  const [editingExpCatId, setEditingExpCatId] = useState<string | null>(null)
+  const [editExpCatName, setEditExpCatName] = useState('')
 
   // Staff state
   const [staff, setStaff] = useState<Profile[]>(initialStaff)
@@ -126,7 +136,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
   })
 
   useEffect(() => {
-    if (activeTab === 'Categories') loadCategories()
+    if (activeTab === 'Categories') { loadCategories(); loadExpenseCategories() }
     if (activeTab === 'M-Pesa' && !mpesaLoaded) loadMpesaSettings()
   }, [activeTab])
 
@@ -184,6 +194,16 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
       .order('name')
     setCategories((data ?? []) as Category[])
     setCatsLoading(false)
+  }
+
+  async function loadExpenseCategories() {
+    setExpCatsLoading(true)
+    const { data } = await supabase
+      .from('expense_categories')
+      .select('id, name, tenant_id')
+      .order('name')
+    setExpenseCategories((data ?? []) as ExpenseCategory[])
+    setExpCatsLoading(false)
   }
 
   // ── Logo upload ──────────────────────────────────────────
@@ -301,6 +321,43 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
     if (error) { toast.error(error.message); return }
     setCategories((prev) => prev.filter((c) => c.id !== id))
     toast.success('Category deleted')
+  }
+
+  // ── Expense Categories CRUD ───────────────────────────────
+  async function addExpenseCategory() {
+    if (!newExpCatName.trim()) return
+    setSavingExpCat(true)
+    const { data, error } = await supabase
+      .from('expense_categories')
+      .insert({ tenant_id: tenant.id, name: newExpCatName.trim() })
+      .select('id, name, tenant_id')
+      .single()
+    if (error) { toast.error(error.message) } else {
+      setExpenseCategories((prev) => [...prev, data as ExpenseCategory].sort((a, b) => a.name.localeCompare(b.name)))
+      setNewExpCatName('')
+      setShowAddExpCat(false)
+      toast.success('Expense category added')
+    }
+    setSavingExpCat(false)
+  }
+
+  async function saveEditExpenseCategory(id: string) {
+    const { error } = await supabase
+      .from('expense_categories')
+      .update({ name: editExpCatName.trim() })
+      .eq('id', id)
+    if (error) { toast.error(error.message); return }
+    setExpenseCategories((prev) => prev.map((c) => c.id === id ? { ...c, name: editExpCatName.trim() } : c))
+    setEditingExpCatId(null)
+    toast.success('Expense category updated')
+  }
+
+  async function deleteExpenseCategory(id: string) {
+    if (!confirm('Delete this expense category?')) return
+    const { error } = await supabase.from('expense_categories').delete().eq('id', id)
+    if (error) { toast.error(error.message); return }
+    setExpenseCategories((prev) => prev.filter((c) => c.id !== id))
+    toast.success('Expense category deleted')
   }
 
   // ── Staff management ─────────────────────────────────────
@@ -600,6 +657,101 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mt-10 mb-4">
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Expense Categories</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Used when recording business expenses</p>
+            </div>
+            <button
+              onClick={() => setShowAddExpCat(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4" /> Add Category
+            </button>
+          </div>
+
+          {showAddExpCat && (
+            <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4 space-y-3">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-400">New Expense Category</p>
+              <input
+                value={newExpCatName}
+                onChange={(e) => setNewExpCatName(e.target.value)}
+                placeholder="e.g. Internet & Airtime"
+                className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={(e) => e.key === 'Enter' && addExpenseCategory()}
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button onClick={addExpenseCategory} disabled={savingExpCat || !newExpCatName.trim()}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+                  {savingExpCat && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <Check className="w-3.5 h-3.5" /> Save
+                </button>
+                <button onClick={() => { setShowAddExpCat(false); setNewExpCatName(''); }}
+                  className="px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-slate-800">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {expCatsLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => <div key={i} className="h-12 bg-gray-100 dark:bg-slate-800 rounded-xl animate-pulse" />)}
+            </div>
+          ) : expenseCategories.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 dark:text-gray-500">
+              <Tag className="w-10 h-10 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">No expense categories yet. Add your first one.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {expenseCategories.map((cat) => {
+                const isOwn = cat.tenant_id === tenant.id
+                return (
+                  <div key={cat.id} className="flex items-center gap-3 bg-white dark:bg-slate-900 border rounded-xl px-4 py-2.5">
+                    {editingExpCatId === cat.id ? (
+                      <div className="flex flex-1 items-center gap-2">
+                        <input
+                          value={editExpCatName}
+                          onChange={(e) => setEditExpCatName(e.target.value)}
+                          className="flex-1 bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onKeyDown={(e) => e.key === 'Enter' && saveEditExpenseCategory(cat.id)}
+                          autoFocus
+                        />
+                        <button onClick={() => saveEditExpenseCategory(cat.id)}
+                          className="p-1.5 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950 rounded-lg">
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => setEditingExpCatId(null)}
+                          className="p-1.5 text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="flex-1 text-sm font-medium text-gray-900 dark:text-white">{cat.name}</span>
+                        {!isOwn && <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">Default</span>}
+                        {isOwn && (
+                          <>
+                            <button onClick={() => { setEditingExpCatId(cat.id); setEditExpCatName(cat.name) }}
+                              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition">
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button onClick={() => deleteExpenseCategory(cat.id)}
+                              className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition">
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
