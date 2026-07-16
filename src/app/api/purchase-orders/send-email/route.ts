@@ -40,9 +40,13 @@ export async function POST(request: Request) {
 
     const { data: tenant } = await supabase
       .from('tenants')
-      .select('name, owner_email, phone')
+      .select('name, owner_email, phone, metadata')
       .eq('id', profile?.tenant_id)
       .single()
+
+    const tenantMetadata = (tenant?.metadata ?? {}) as Record<string, unknown>
+    const procurementEmail = (tenantMetadata.procurement_email as string) || tenant?.owner_email || undefined
+    const tenantAddress = (tenantMetadata.address as string) || ''
 
     type SupplierObj = { name?: string; email?: string; contact_name?: string }
     const supplier = po.supplier as SupplierObj
@@ -119,8 +123,9 @@ export async function POST(request: Request) {
 
   <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 13px; color: #94a3b8;">
     <p style="margin: 0;"><strong>${tenant?.name ?? ''}</strong></p>
-    ${tenant?.owner_email ? `<p style="margin: 2px 0;">${tenant.owner_email}</p>` : ''}
+    ${tenantAddress ? `<p style="margin: 2px 0;">${tenantAddress}</p>` : ''}
     ${tenant?.phone ? `<p style="margin: 2px 0;">${tenant.phone}</p>` : ''}
+    ${procurementEmail ? `<p style="margin: 2px 0;">${procurementEmail}</p>` : ''}
   </div>
 </body>
 </html>`
@@ -128,6 +133,7 @@ export async function POST(request: Request) {
     const { error: emailErr } = await resend.emails.send({
       from: `${tenant?.name ?? 'EdosPoa'} <orders@${process.env.RESEND_FROM_DOMAIN ?? 'edos.co.ke'}>`,
       to: [supplierEmail],
+      replyTo: procurementEmail,
       subject: `Purchase Order ${po.po_number} from ${tenant?.name ?? 'us'}`,
       html,
     })

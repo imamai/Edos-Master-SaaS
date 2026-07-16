@@ -18,6 +18,7 @@ const tenantSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   kra_pin: z.string().optional(),
+  procurement_email: z.string().email('Invalid email address').optional().or(z.literal('')),
   receipt_header: z.string().optional(),
   receipt_footer: z.string().optional(),
   payment_instructions: z.string().optional(),
@@ -111,6 +112,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
       phone: tenant.phone || '',
       address: (tenant.metadata?.address as string) || '',
       kra_pin: (tenant.metadata?.kra_pin as string) || '',
+      procurement_email: (tenant.metadata?.procurement_email as string) || '',
       receipt_header: tenant.receipt_header || '',
       receipt_footer: tenant.receipt_footer || '',
       payment_instructions: (tenant.metadata?.payment_instructions as string) || '',
@@ -218,11 +220,12 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
 
   // ── Business save ────────────────────────────────────────
   const onSaveBusiness = async (data: TenantForm) => {
-    const { address, kra_pin, payment_instructions, quotation_notes, invoice_terms, ...directFields } = data
+    const { address, kra_pin, procurement_email, payment_instructions, quotation_notes, invoice_terms, ...directFields } = data
     const metadata = {
       ...(tenant.metadata ?? {}),
       address: address || '',
       kra_pin: kra_pin || '',
+      procurement_email: procurement_email || '',
       payment_instructions: payment_instructions || '',
       quotation_notes: quotation_notes || '',
       invoice_terms: invoice_terms || '',
@@ -420,6 +423,14 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
             <input {...register('kra_pin')} placeholder="e.g. P051234567A"
               className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Kenya Revenue Authority PIN — shown on tax invoices and quotations.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Procurement Contact Email</label>
+            <input {...register('procurement_email')} type="email" placeholder="orders@yourbusiness.com"
+              className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+              Where suppliers should reply when you email them Purchase Orders. Falls back to your account email if left blank.
+            </p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Brand Color</label>
