@@ -38,7 +38,7 @@ export default function SuppliersClient() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Suppliers</h1>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Suppliers</h1>
         <div className="flex items-center gap-2">
           <ExportMenu
             columns={[
@@ -62,60 +62,60 @@ export default function SuppliersClient() {
       </div>
 
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search suppliers..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500" />
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Supplier</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Contact</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Payment Terms</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Outstanding</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Actions</th>
+              <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Supplier</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Contact</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Payment Terms</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Outstanding</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 Array.from({ length: 4 }).map((_, i) => (
-                  <tr key={i}><td colSpan={5} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td></tr>
+                  <tr key={i}><td colSpan={5} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse dark:bg-slate-800" /></td></tr>
                 ))
               ) : suppliers.length === 0 ? (
-                <tr><td colSpan={5} className="text-center py-12 text-slate-400">
+                <tr><td colSpan={5} className="text-center py-12 text-slate-400 dark:text-slate-500">
                   <Truck className="w-10 h-10 mx-auto mb-2 opacity-40" /><p>No suppliers found</p>
                 </td></tr>
               ) : (
                 suppliers.map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50 transition">
+                  <tr key={s.id} className="hover:bg-slate-50 transition dark:hover:bg-slate-800">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                          <Truck className="w-4 h-4 text-blue-500" />
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center dark:bg-blue-950">
+                          <Truck className="w-4 h-4 text-blue-500 dark:text-blue-400" />
                         </div>
                         <div>
-                          <p className="font-medium text-slate-800">{s.name}</p>
-                          {s.contact_person && <p className="text-xs text-slate-400">{s.contact_person}</p>}
+                          <p className="font-medium text-slate-800 dark:text-white">{s.name}</p>
+                          {s.contact_person && <p className="text-xs text-slate-400 dark:text-slate-500">{s.contact_person}</p>}
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-600 text-xs">
+                    <td className="px-4 py-3 text-slate-600 text-xs dark:text-slate-300">
                       {s.phone && <p className="flex items-center gap-1"><Phone className="w-3 h-3" />{s.phone}</p>}
                       {s.email && <p className="flex items-center gap-1"><Mail className="w-3 h-3" />{s.email}</p>}
                     </td>
-                    <td className="px-4 py-3 text-slate-600 text-sm">{s.payment_terms ?? '—'}</td>
+                    <td className="px-4 py-3 text-slate-600 text-sm dark:text-slate-300">{s.payment_terms ?? '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <span className={(s.outstanding_balance ?? 0) > 0 ? 'text-red-600 font-semibold' : 'text-slate-500'}>
+                      <span className={(s.outstanding_balance ?? 0) > 0 ? 'text-red-600 font-semibold dark:text-red-400' : 'text-slate-500 dark:text-slate-400'}>
                         {formatCurrency(s.outstanding_balance ?? 0)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end">
                         <button onClick={() => { setEditSupplier(s); setShowForm(true) }}
-                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition">
+                          className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition dark:text-slate-500 dark:hover:text-blue-400 dark:hover:bg-blue-950">
                           <Edit2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -155,7 +155,7 @@ function SupplierFormModal({ supplier, tenantId, onClose, onSaved }: {
     address: supplier?.address ?? '',
   })
 
-  const ic = 'w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const ic = 'w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -175,10 +175,10 @@ function SupplierFormModal({ supplier, tenantId, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-800">{supplier ? 'Edit Supplier' : 'New Supplier'}</h3>
-          <button onClick={onClose}><X className="w-5 h-5 text-slate-400" /></button>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg dark:bg-slate-900">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-bold text-slate-800 dark:text-white">{supplier ? 'Edit Supplier' : 'New Supplier'}</h3>
+          <button onClick={onClose}><X className="w-5 h-5 text-slate-400 dark:text-slate-500" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-3">
           {[
@@ -191,13 +191,13 @@ function SupplierFormModal({ supplier, tenantId, onClose, onSaved }: {
             { key: 'address', label: 'Address' },
           ].map(({ key, label, required }) => (
             <div key={key}>
-              <label className="block text-xs font-medium text-slate-600 mb-1">{label}</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">{label}</label>
               <input required={required} value={form[key as keyof typeof form]}
                 onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))} className={ic} />
             </div>
           ))}
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium text-sm">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium text-sm dark:bg-slate-800 dark:text-slate-200">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2">
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {supplier ? 'Save' : 'Create'}

@@ -11,6 +11,7 @@ import {
   FileText, Package, Download, Printer
 } from 'lucide-react'
 import { useTenantId } from '@/lib/hooks/useTenantId'
+import ExportMenu from '@/components/shared/ExportMenu'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import type {
@@ -82,6 +83,7 @@ const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: st
 
 export default function ProcurementClient() {
   const [tab, setTab] = useState<Tab>('suppliers')
+  const [traceSupplierId, setTraceSupplierId] = useState<string | null>(null)
 
   return (
     <div className="space-y-5">
@@ -108,9 +110,9 @@ export default function ProcurementClient() {
         ))}
       </div>
 
-      {tab === 'suppliers' && <SuppliersTab />}
+      {tab === 'suppliers' && <SuppliersTab onTraceSupplier={(id) => { setTraceSupplierId(id); setTab('orders') }} />}
       {tab === 'catalog'   && <CatalogTab />}
-      {tab === 'orders'    && <PurchaseOrdersTab />}
+      {tab === 'orders'    && <PurchaseOrdersTab initialSupplierFilter={traceSupplierId} />}
       {tab === 'grn'       && <GRNTab />}
     </div>
   )
@@ -119,7 +121,7 @@ export default function ProcurementClient() {
 /* ──────────────────────────────────────────────────────────────
    SUPPLIERS TAB
 ────────────────────────────────────────────────────────────── */
-function SuppliersTab() {
+function SuppliersTab({ onTraceSupplier }: { onTraceSupplier: (supplierId: string) => void }) {
   const supabase = createClient()
   const tenantId = useTenantId()
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
@@ -140,6 +142,13 @@ function SuppliersTab() {
 
   useEffect(() => { load() }, [load])
 
+  async function deactivateSupplier(s: Supplier) {
+    if (!confirm(`Deactivate ${s.name}? They'll be hidden from supplier lists, but existing purchase orders and GRNs referencing them are kept.`)) return
+    const { error } = await supabase.from('suppliers').update({ is_active: false }).eq('id', s.id)
+    if (error) toast.error(error.message)
+    else { toast.success('Supplier deactivated'); load() }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -149,10 +158,36 @@ function SuppliersTab() {
             placeholder="Search suppliers..."
             className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
-        <button onClick={() => { setEditSupplier(null); setShowForm(true) }}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition">
-          <Plus className="w-4 h-4" /> Add Supplier
-        </button>
+        <div className="flex items-center gap-2">
+          <ExportMenu
+            columns={[
+              { header: 'Name', key: 'name', width: 22 },
+              { header: 'Contact', key: 'contact_name', width: 18 },
+              { header: 'Phone', key: 'phone', width: 14 },
+              { header: 'Email', key: 'email', width: 22 },
+              { header: 'VAT / KRA PIN', key: 'vat_number', width: 16 },
+              { header: 'Lead Time (days)', key: 'lead_time_days', width: 12 },
+              { header: 'Rating', key: 'rating', width: 8 },
+              { header: 'Balance', key: 'balance', width: 12 },
+            ]}
+            rows={suppliers.map((s) => ({
+              name: s.name,
+              contact_name: s.contact_name ?? '',
+              phone: s.phone ?? '',
+              email: s.email ?? '',
+              vat_number: (s as SupplierExt).vat_number ?? '',
+              lead_time_days: (s as SupplierExt).lead_time_days ?? 3,
+              rating: (s as SupplierExt).rating ?? '',
+              balance: s.balance ?? 0,
+            }))}
+            filename={`suppliers-${new Date().toISOString().slice(0, 10)}`}
+            title="Suppliers Report"
+          />
+          <button onClick={() => { setEditSupplier(null); setShowForm(true) }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition">
+            <Plus className="w-4 h-4" /> Add Supplier
+          </button>
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
@@ -215,10 +250,20 @@ function SuppliersTab() {
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button onClick={() => { setEditSupplier(s); setShowForm(true) }}
-                      className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => onTraceSupplier(s.id)} title="View this supplier's purchase orders"
+                        className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition">
+                        <ShoppingBag className="w-3.5 h-3.5" /> POs
+                      </button>
+                      <button onClick={() => { setEditSupplier(s); setShowForm(true) }} title="Edit supplier"
+                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => deactivateSupplier(s)} title="Deactivate supplier"
+                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -295,6 +340,28 @@ function CatalogTab() {
           <option value="">All Suppliers</option>
           {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
+        <ExportMenu
+          columns={[
+            { header: 'Product', key: 'product_name', width: 22 },
+            { header: 'Supplier', key: 'supplier_name', width: 20 },
+            { header: 'Supplier SKU', key: 'supplier_sku', width: 16 },
+            { header: 'Unit Price', key: 'unit_price', width: 12 },
+            { header: 'MOQ', key: 'moq', width: 8 },
+            { header: 'VAT', key: 'vat_applicable', width: 8 },
+            { header: 'Status', key: 'is_available', width: 12 },
+          ]}
+          rows={items.map((item) => ({
+            product_name: item.product_name,
+            supplier_name: (item.supplier as { name: string } | undefined)?.name ?? '',
+            supplier_sku: item.supplier_sku ?? '',
+            unit_price: item.unit_price,
+            moq: item.moq,
+            vat_applicable: item.vat_applicable ? 'VAT' : 'No VAT',
+            is_available: item.is_available ? 'Available' : 'Unavailable',
+          }))}
+          filename={`supplier-catalog-${new Date().toISOString().slice(0, 10)}`}
+          title="Supplier Catalog Report"
+        />
         <button onClick={() => { setEditItem(null); setShowForm(true) }}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition">
           <Plus className="w-4 h-4" /> Add Item
@@ -384,15 +451,27 @@ function CatalogTab() {
 /* ──────────────────────────────────────────────────────────────
    PURCHASE ORDERS TAB
 ────────────────────────────────────────────────────────────── */
-function PurchaseOrdersTab() {
+function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: string | null }) {
   const supabase = createClient()
   const tenantId = useTenantId()
   const [orders, setOrders] = useState<PurchaseOrder[]>([])
+  const [allSuppliers, setAllSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [paymentFilter, setPaymentFilter] = useState<string>('')
+  const [supplierFilter, setSupplierFilter] = useState<string>(initialSupplierFilter ?? '')
   const [showForm, setShowForm] = useState(false)
+  const [editPO, setEditPO] = useState<PurchaseOrder | null>(null)
   const [detailPO, setDetailPO] = useState<PurchaseOrder | null>(null)
   const [sendingId, setSendingId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!tenantId) return
+    supabase.from('suppliers').select('*').eq('tenant_id', tenantId).eq('is_active', true).order('name')
+      .then(({ data }) => setAllSuppliers((data as Supplier[]) ?? []))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenantId])
 
   const load = useCallback(async () => {
     if (!tenantId) return
@@ -401,12 +480,16 @@ function PurchaseOrdersTab() {
       .select('*, supplier:suppliers(name,email,phone,address,city)')
       .eq('tenant_id', tenantId)
     if (statusFilter) q = q.eq('status', statusFilter)
+    if (paymentFilter) q = q.eq('payment_status', paymentFilter)
+    if (supplierFilter) q = q.eq('supplier_id', supplierFilter)
     const { data } = await q.order('created_at', { ascending: false }).limit(100)
     setOrders((data as PurchaseOrder[]) ?? [])
     setLoading(false)
-  }, [tenantId, statusFilter])
+  }, [tenantId, statusFilter, paymentFilter, supplierFilter])
 
   useEffect(() => { load() }, [load])
+
+  const traceSupplierName = supplierFilter ? allSuppliers.find((s) => s.id === supplierFilter)?.name : null
 
   async function sendEmail(po: PurchaseOrder) {
     setSendingId(po.id)
@@ -427,6 +510,17 @@ function PurchaseOrdersTab() {
     }
   }
 
+  async function deletePO(po: PurchaseOrder) {
+    if (!confirm(`Delete purchase order ${po.po_number}? This cannot be undone.`)) return
+    setDeletingId(po.id)
+    const { error: itemsErr } = await supabase.from('purchase_order_items').delete().eq('purchase_order_id', po.id)
+    if (itemsErr) { toast.error(itemsErr.message); setDeletingId(null); return }
+    const { error } = await supabase.from('purchase_orders').delete().eq('id', po.id)
+    setDeletingId(null)
+    if (error) toast.error(error.message)
+    else { toast.success('Purchase order deleted'); load() }
+  }
+
   const statusColors: Record<string, string> = {
     draft: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300',
     sent: 'bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-400',
@@ -438,7 +532,14 @@ function PurchaseOrdersTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      {supplierFilter && traceSupplierName && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 rounded-xl text-sm text-blue-700 dark:text-blue-400">
+          <ShoppingBag className="w-4 h-4 flex-shrink-0" />
+          Tracing purchase orders for <strong>{traceSupplierName}</strong>
+          <button onClick={() => setSupplierFilter('')} className="ml-auto text-xs underline hover:no-underline">Clear</button>
+        </div>
+      )}
+      <div className="flex items-center gap-3 flex-wrap">
         <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           {['', 'draft', 'sent', 'approved', 'delivered', 'partial', 'cancelled'].map((s) => (
             <button key={s} onClick={() => setStatusFilter(s)}
@@ -449,7 +550,48 @@ function PurchaseOrdersTab() {
             </button>
           ))}
         </div>
+        <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          {['', 'unpaid', 'partial', 'paid'].map((p) => (
+            <button key={p} onClick={() => setPaymentFilter(p)}
+              className={`px-3 py-2 text-xs font-medium transition capitalize ${
+                paymentFilter === p ? 'bg-blue-600 text-white' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }`}>
+              {p || 'Any Payment'}
+            </button>
+          ))}
+        </div>
+        <select value={supplierFilter} onChange={(e) => setSupplierFilter(e.target.value)}
+          className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">All Suppliers</option>
+          {allSuppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
         <div className="flex-1" />
+        <ExportMenu
+          columns={[
+            { header: 'PO Number', key: 'po_number', width: 16 },
+            { header: 'Supplier', key: 'supplier_name', width: 20 },
+            { header: 'Type', key: 'po_type', width: 14 },
+            { header: 'Status', key: 'status', width: 12 },
+            { header: 'Expected Delivery', key: 'expected_delivery_date', width: 16 },
+            { header: 'Total', key: 'total_amount', width: 12 },
+            { header: 'Payment Status', key: 'payment_status', width: 14 },
+            { header: 'Amount Paid', key: 'amount_paid', width: 12 },
+            { header: 'Balance Due', key: 'balance_due', width: 12 },
+          ]}
+          rows={orders.map((po) => ({
+            po_number: po.po_number,
+            supplier_name: (po.supplier as { name: string } | undefined)?.name ?? '',
+            po_type: (po.po_type ?? 'purchase_order').replace('_', ' '),
+            status: po.status,
+            expected_delivery_date: po.expected_delivery_date ?? '',
+            total_amount: po.total_amount,
+            payment_status: po.payment_status,
+            amount_paid: po.amount_paid,
+            balance_due: po.total_amount - po.amount_paid,
+          }))}
+          filename={`purchase-orders-${new Date().toISOString().slice(0, 10)}`}
+          title="Purchase Orders Report"
+        />
         <button onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition">
           <Plus className="w-4 h-4" /> New PO
@@ -464,6 +606,7 @@ function PurchaseOrdersTab() {
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Supplier</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Type</th>
               <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Status</th>
+              <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Payment</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Expected Delivery</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Total</th>
               <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Actions</th>
@@ -472,10 +615,10 @@ function PurchaseOrdersTab() {
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i}><td colSpan={7} className="px-4 py-3"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>
+                <tr key={i}><td colSpan={8} className="px-4 py-3"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>
               ))
             ) : orders.length === 0 ? (
-              <tr><td colSpan={7} className="text-center py-16 text-slate-400 dark:text-slate-500">
+              <tr><td colSpan={8} className="text-center py-16 text-slate-400 dark:text-slate-500">
                 <ShoppingBag className="w-10 h-10 mx-auto mb-2 opacity-40" />
                 <p>No purchase orders yet.</p>
               </td></tr>
@@ -499,6 +642,11 @@ function PurchaseOrdersTab() {
                       {po.status}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium capitalize ${paymentStatusColors[po.payment_status] ?? paymentStatusColors.unpaid}`}>
+                      {po.payment_status}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300 text-xs">
                     {po.expected_delivery_date
                       ? new Date(po.expected_delivery_date).toLocaleDateString('en-KE')
@@ -517,10 +665,22 @@ function PurchaseOrdersTab() {
                           {sendingId === po.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                         </button>
                       )}
-                      <button onClick={() => setDetailPO(po)}
-                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
-                        <FileText className="w-4 h-4" />
+                      <button onClick={() => setDetailPO(po)} title="View PO"
+                        className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
+                        <FileText className="w-3.5 h-3.5" /> View
                       </button>
+                      {po.status === 'draft' && (
+                        <button onClick={() => setEditPO(po)} title="Edit PO"
+                          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {(po.status === 'draft' || po.status === 'cancelled') && (
+                        <button onClick={() => deletePO(po)} disabled={deletingId === po.id} title="Delete PO"
+                          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition disabled:opacity-40">
+                          {deletingId === po.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -530,11 +690,12 @@ function PurchaseOrdersTab() {
         </table>
       </div>
 
-      {showForm && tenantId && (
+      {(showForm || editPO) && tenantId && (
         <CreatePOModal
           tenantId={tenantId}
-          onClose={() => setShowForm(false)}
-          onSaved={() => { setShowForm(false); load() }}
+          editPO={editPO}
+          onClose={() => { setShowForm(false); setEditPO(null) }}
+          onSaved={() => { setShowForm(false); setEditPO(null); load() }}
         />
       )}
       {detailPO && (
@@ -553,8 +714,10 @@ function GRNTab() {
   const [grns, setGrns] = useState<GoodsReceivedNote[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
+  const [editGRN, setEditGRN] = useState<GoodsReceivedNote | null>(null)
   const [detailGRN, setDetailGRN] = useState<GoodsReceivedNote | null>(null)
   const [confirming, setConfirming] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!tenantId) return
@@ -580,6 +743,17 @@ function GRNTab() {
     else { toast.success('GRN confirmed — stock updated'); load() }
   }
 
+  async function deleteGRN(grn: GoodsReceivedNote) {
+    if (!confirm(`Delete GRN ${grn.grn_number}? This cannot be undone.`)) return
+    setDeletingId(grn.id)
+    const { error: itemsErr } = await supabase.from('grn_items').delete().eq('grn_id', grn.id)
+    if (itemsErr) { toast.error(itemsErr.message); setDeletingId(null); return }
+    const { error } = await supabase.from('goods_received_notes').delete().eq('id', grn.id)
+    setDeletingId(null)
+    if (error) toast.error(error.message)
+    else { toast.success('GRN deleted'); load() }
+  }
+
   const statusColors: Record<string, string> = {
     draft: 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300',
     confirmed: 'bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400',
@@ -588,7 +762,27 @@ function GRNTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <ExportMenu
+          columns={[
+            { header: 'GRN Number', key: 'grn_number', width: 16 },
+            { header: 'Supplier', key: 'supplier_name', width: 20 },
+            { header: 'Linked PO', key: 'po_number', width: 16 },
+            { header: 'Received Date', key: 'received_date', width: 14 },
+            { header: 'Status', key: 'status', width: 12 },
+            { header: 'Total Cost', key: 'total_cost', width: 12 },
+          ]}
+          rows={grns.map((grn) => ({
+            grn_number: grn.grn_number,
+            supplier_name: (grn.supplier as { name: string } | undefined)?.name ?? '',
+            po_number: (grn.purchase_order as { po_number: string } | undefined)?.po_number ?? '',
+            received_date: grn.received_date,
+            status: grn.status,
+            total_cost: grn.total_cost,
+          }))}
+          filename={`goods-received-${new Date().toISOString().slice(0, 10)}`}
+          title="Goods Received Report"
+        />
         <button onClick={() => setShowCreate(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition">
           <Plus className="w-4 h-4" /> New GRN
@@ -622,7 +816,9 @@ function GRNTab() {
               grns.map((grn) => (
                 <tr key={grn.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
                   <td className="px-4 py-3">
-                    <p className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">{grn.grn_number}</p>
+                    <button onClick={() => setDetailGRN(grn)} className="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                      {grn.grn_number}
+                    </button>
                     {grn.supplier_invoice_ref && <p className="text-xs text-slate-400 dark:text-slate-500">Inv: {grn.supplier_invoice_ref}</p>}
                   </td>
                   <td className="px-4 py-3 text-slate-700 dark:text-slate-200 text-sm">
@@ -642,9 +838,9 @@ function GRNTab() {
                   <td className="px-4 py-3 text-right font-semibold text-slate-800 dark:text-white">{formatCurrency(grn.total_cost)}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setDetailGRN(grn)}
-                        className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
-                        <FileText className="w-4 h-4" />
+                      <button onClick={() => setDetailGRN(grn)} title="View GRN"
+                        className="flex items-center gap-1 px-2 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
+                        <FileText className="w-3.5 h-3.5" /> View
                       </button>
                       {grn.status === 'draft' && (
                         <button
@@ -656,6 +852,18 @@ function GRNTab() {
                           {confirming === grn.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
                         </button>
                       )}
+                      {grn.status === 'draft' && (
+                        <button onClick={() => setEditGRN(grn)} title="Edit GRN"
+                          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg transition">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      )}
+                      {grn.status === 'draft' && (
+                        <button onClick={() => deleteGRN(grn)} disabled={deletingId === grn.id} title="Delete GRN"
+                          className="p-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-lg transition disabled:opacity-40">
+                          {deletingId === grn.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -665,11 +873,12 @@ function GRNTab() {
         </table>
       </div>
 
-      {showCreate && tenantId && (
+      {(showCreate || editGRN) && tenantId && (
         <CreateGRNModal
           tenantId={tenantId}
-          onClose={() => setShowCreate(false)}
-          onSaved={() => { setShowCreate(false); load() }}
+          editGRN={editGRN}
+          onClose={() => { setShowCreate(false); setEditGRN(null) }}
+          onSaved={() => { setShowCreate(false); setEditGRN(null); load() }}
         />
       )}
       {detailGRN && (
@@ -886,8 +1095,8 @@ function CatalogItemModal({ item, tenantId, suppliers, products, onClose, onSave
   )
 }
 
-function CreatePOModal({ tenantId, onClose, onSaved }: {
-  tenantId: string; onClose: () => void; onSaved: () => void
+function CreatePOModal({ tenantId, editPO, onClose, onSaved }: {
+  tenantId: string; editPO?: PurchaseOrder | null; onClose: () => void; onSaved: () => void
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -895,10 +1104,10 @@ function CreatePOModal({ tenantId, onClose, onSaved }: {
   const [products, setProducts] = useState<Product[]>([])
   const [catalog, setCatalog] = useState<SupplierCatalog[]>([])
   const [form, setForm] = useState({
-    supplier_id: '',
-    po_type: 'purchase_order' as POType,
-    expected_delivery_date: '',
-    notes: '',
+    supplier_id: editPO?.supplier_id ?? '',
+    po_type: (editPO?.po_type ?? 'purchase_order') as POType,
+    expected_delivery_date: editPO?.expected_delivery_date ?? '',
+    notes: editPO?.notes ?? '',
     vat_rate: 16,
   })
   const [items, setItems] = useState<Array<{
@@ -915,6 +1124,23 @@ function CreatePOModal({ tenantId, onClose, onSaved }: {
       setProducts((pRes.data as Product[]) ?? [])
     })
   }, [tenantId])
+
+  useEffect(() => {
+    if (!editPO) return
+    supabase.from('purchase_order_items').select('*').eq('purchase_order_id', editPO.id)
+      .then(({ data }) => {
+        setItems(((data as PurchaseOrderItem[]) ?? []).map((it) => ({
+          product_id: it.product_id ?? '',
+          product_name: it.product_name,
+          product_sku: it.product_sku ?? '',
+          quantity: it.quantity,
+          unit: it.unit,
+          unit_price: it.unit_price,
+          vat_rate: it.vat_rate,
+        })))
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editPO?.id])
 
   useEffect(() => {
     if (!form.supplier_id) { setCatalog([]); return }
@@ -951,11 +1177,57 @@ function CreatePOModal({ tenantId, onClose, onSaved }: {
   const vatTotal = items.reduce((s, it) => s + (it.quantity * it.unit_price * it.vat_rate / 100), 0)
   const total = subtotal + vatTotal
 
+  function buildPOItems(poId: string) {
+    return items.map((it) => {
+      const lineTotal = it.quantity * it.unit_price * (1 + it.vat_rate / 100)
+      return {
+        po_id: poId,
+        purchase_order_id: poId,
+        tenant_id: tenantId,
+        product_id: it.product_id || null,
+        product_name: it.product_name,
+        product_sku: it.product_sku || null,
+        ordered_qty: it.quantity,
+        quantity: it.quantity,
+        unit: it.unit,
+        unit_price: it.unit_price,
+        total_price: lineTotal,
+        vat_rate: it.vat_rate,
+        vat_amount: it.quantity * it.unit_price * it.vat_rate / 100,
+        total: lineTotal,
+      }
+    })
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.supplier_id) { toast.error('Select a supplier'); return }
     if (items.length === 0) { toast.error('Add at least one item'); return }
     setLoading(true)
+
+    if (editPO) {
+      const { error: updateError } = await supabase.from('purchase_orders').update({
+        supplier_id: form.supplier_id || null,
+        po_type: form.po_type,
+        subtotal,
+        vat_amount: vatTotal,
+        total_amount: total,
+        expected_delivery_date: form.expected_delivery_date || null,
+        notes: form.notes || null,
+      }).eq('id', editPO.id)
+      if (updateError) { toast.error(updateError.message); setLoading(false); return }
+
+      const { error: delErr } = await supabase.from('purchase_order_items').delete().eq('purchase_order_id', editPO.id)
+      if (delErr) { toast.error(delErr.message); setLoading(false); return }
+
+      const { error: itemsError } = await supabase.from('purchase_order_items').insert(buildPOItems(editPO.id))
+      setLoading(false)
+      if (itemsError) { toast.error(itemsError.message); return }
+      toast.success('Purchase order updated')
+      onSaved()
+      return
+    }
+
     const { data: poData, error: poError } = await supabase.rpc('generate_po_number', { p_tenant_id: tenantId })
     if (poError) { toast.error(poError.message); setLoading(false); return }
 
@@ -975,26 +1247,7 @@ function CreatePOModal({ tenantId, onClose, onSaved }: {
 
     if (insertError || !po) { toast.error(insertError?.message ?? 'Failed to create PO'); setLoading(false); return }
 
-    const poItems = items.map((it) => {
-      const lineTotal = it.quantity * it.unit_price * (1 + it.vat_rate / 100)
-      return {
-        po_id: po.id,
-        purchase_order_id: po.id,
-        tenant_id: tenantId,
-        product_id: it.product_id || null,
-        product_name: it.product_name,
-        product_sku: it.product_sku || null,
-        ordered_qty: it.quantity,
-        quantity: it.quantity,
-        unit: it.unit,
-        unit_price: it.unit_price,
-        total_price: lineTotal,
-        vat_rate: it.vat_rate,
-        vat_amount: it.quantity * it.unit_price * it.vat_rate / 100,
-        total: lineTotal,
-      }
-    })
-    const { error: itemsError } = await supabase.from('purchase_order_items').insert(poItems)
+    const { error: itemsError } = await supabase.from('purchase_order_items').insert(buildPOItems(po.id))
     setLoading(false)
     if (itemsError) { toast.error(itemsError.message); return }
     toast.success('Purchase order created')
@@ -1004,7 +1257,7 @@ function CreatePOModal({ tenantId, onClose, onSaved }: {
   const ic = 'w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <ModalShell title="New Purchase Order" onClose={onClose} maxW="max-w-3xl">
+    <ModalShell title={editPO ? `Edit Purchase Order: ${editPO.po_number}` : 'New Purchase Order'} onClose={onClose} maxW="max-w-3xl">
       <form onSubmit={handleSubmit} className="p-5 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -1119,7 +1372,7 @@ function CreatePOModal({ tenantId, onClose, onSaved }: {
           <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-medium text-sm">Cancel</button>
           <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            Create Purchase Order
+            {editPO ? 'Save Changes' : 'Create Purchase Order'}
           </button>
         </div>
       </form>
@@ -1129,12 +1382,22 @@ function CreatePOModal({ tenantId, onClose, onSaved }: {
 
 type POType = 'purchase_request' | 'rfq' | 'purchase_order'
 
+const paymentStatusColors: Record<string, string> = {
+  unpaid: 'bg-red-100 dark:bg-red-950 text-red-600 dark:text-red-400',
+  partial: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400',
+  paid: 'bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400',
+}
+
 function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void }) {
   const supabase = createClient()
   const branding = useTenantBranding()
   const [items, setItems] = useState<PurchaseOrderItem[]>([])
   const [loading, setLoading] = useState(true)
   const [updating, setUpdating] = useState(false)
+  const [showPayForm, setShowPayForm] = useState(false)
+  const [payAmount, setPayAmount] = useState('')
+  const [paying, setPaying] = useState(false)
+  const balanceDue = po.total_amount - po.amount_paid
 
   useEffect(() => {
     supabase.from('purchase_order_items').select('*').eq('purchase_order_id', po.id)
@@ -1147,6 +1410,22 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
     setUpdating(false)
     if (error) toast.error(error.message)
     else { toast.success(`Status updated to ${status}`); onClose() }
+  }
+
+  async function recordPayment(e: React.FormEvent) {
+    e.preventDefault()
+    const amount = parseFloat(payAmount)
+    if (!amount || amount <= 0) { toast.error('Enter a valid amount'); return }
+    if (amount > balanceDue) { toast.error(`Amount exceeds balance due (${formatCurrency(balanceDue)})`); return }
+    setPaying(true)
+    const newPaid = po.amount_paid + amount
+    const newStatus = newPaid >= po.total_amount ? 'paid' : 'partial'
+    const { error } = await supabase.from('purchase_orders')
+      .update({ amount_paid: newPaid, payment_status: newStatus })
+      .eq('id', po.id)
+    setPaying(false)
+    if (error) toast.error(error.message)
+    else { toast.success('Payment recorded'); onClose() }
   }
 
   const sup = po.supplier as { name?: string; email?: string; phone?: string; address?: string; city?: string } | undefined
@@ -1175,6 +1454,8 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
       <div><span class="text-slate-500">Subtotal</span><span>${formatCurrency(po.subtotal)}</span></div>
       <div><span class="text-slate-500">VAT</span><span>${formatCurrency(po.vat_amount)}</span></div>
       <div class="font-bold text-blue-700" style="border-top:1px solid #bfdbfe;padding-top:6px;margin-top:4px"><span>TOTAL</span><span>${formatCurrency(po.total_amount)}</span></div>
+      <div><span class="text-slate-500">Amount Paid</span><span>${formatCurrency(po.amount_paid)}</span></div>
+      <div class="font-semibold" style="border-top:1px solid #e2e8f0;padding-top:6px;margin-top:4px"><span>Balance Due</span><span>${formatCurrency(po.total_amount - po.amount_paid)}</span></div>
     </div>`
   }
 
@@ -1193,6 +1474,7 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
           <p><span class="font-semibold text-slate-800">PO #:</span> ${po.po_number}</p>
           <p><span class="font-semibold text-slate-800">Date:</span> ${new Date(po.created_at).toLocaleDateString('en-KE')}</p>
           <p><span class="font-semibold text-slate-800">Status:</span> ${po.status}</p>
+          <p><span class="font-semibold text-slate-800">Payment:</span> ${po.payment_status}</p>
         </div>
       </div>
     </div>`
@@ -1250,9 +1532,16 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
     doc.text('TOTAL', totalsX, afterTable + 21)
     doc.text(formatCurrency(po.total_amount), 195, afterTable + 21, { align: 'right' })
 
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_GRAY)
+    doc.text('Amount Paid', totalsX, afterTable + 28)
+    doc.setTextColor(...PDF_DARK); doc.text(formatCurrency(po.amount_paid), 195, afterTable + 28, { align: 'right' })
+    doc.setFont('helvetica', 'bold')
+    doc.text('Balance Due', totalsX, afterTable + 34)
+    doc.text(formatCurrency(po.total_amount - po.amount_paid), 195, afterTable + 34, { align: 'right' })
+
     if (po.notes) {
       doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(...PDF_GRAY)
-      doc.text(`Notes: ${po.notes}`, 15, afterTable + 32)
+      doc.text(`Notes: ${po.notes}`, 15, afterTable + 45)
     }
 
     doc.save(`PO-${po.po_number}.pdf`)
@@ -1277,6 +1566,14 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
           <div><p className="text-xs text-slate-500 dark:text-slate-400">Type</p><p className="capitalize text-slate-700 dark:text-slate-200">{po.po_type?.replace('_', ' ') ?? '—'}</p></div>
           <div><p className="text-xs text-slate-500 dark:text-slate-400">Expected Delivery</p>
             <p className="text-slate-700 dark:text-slate-200">{po.expected_delivery_date ? new Date(po.expected_delivery_date).toLocaleDateString('en-KE') : '—'}</p>
+          </div>
+          <div><p className="text-xs text-slate-500 dark:text-slate-400">Payment</p>
+            <span className={`inline-flex text-xs px-2 py-0.5 rounded-full font-medium capitalize ${paymentStatusColors[po.payment_status] ?? paymentStatusColors.unpaid}`}>
+              {po.payment_status}
+            </span>
+          </div>
+          <div><p className="text-xs text-slate-500 dark:text-slate-400">Balance Due</p>
+            <p className={`font-semibold ${balanceDue > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>{formatCurrency(balanceDue)}</p>
           </div>
           {po.notes && <div className="col-span-2"><p className="text-xs text-slate-500 dark:text-slate-400">Notes</p><p className="text-slate-700 dark:text-slate-200">{po.notes}</p></div>}
         </div>
@@ -1316,7 +1613,34 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
           <div className="flex justify-between text-slate-600 dark:text-slate-300"><span>Subtotal</span><span>{formatCurrency(po.subtotal)}</span></div>
           <div className="flex justify-between text-slate-600 dark:text-slate-300"><span>VAT</span><span>{formatCurrency(po.vat_amount)}</span></div>
           <div className="flex justify-between font-bold text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-700 pt-1"><span>Total</span><span>{formatCurrency(po.total_amount)}</span></div>
+          <div className="flex justify-between text-green-600 dark:text-green-400"><span>Amount Paid</span><span>{formatCurrency(po.amount_paid)}</span></div>
+          <div className="flex justify-between font-semibold text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-700 pt-1"><span>Balance Due</span><span>{formatCurrency(balanceDue)}</span></div>
         </div>
+
+        {po.status !== 'cancelled' && balanceDue > 0 && (
+          <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3">
+            {showPayForm ? (
+              <form onSubmit={recordPayment} className="flex items-center gap-2">
+                <input type="number" min="0" max={balanceDue} step="0.01" autoFocus
+                  value={payAmount} onChange={(e) => setPayAmount(e.target.value)}
+                  placeholder={`Up to ${formatCurrency(balanceDue)}`}
+                  className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <button type="submit" disabled={paying}
+                  className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-40 flex items-center gap-1.5">
+                  {paying && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Record
+                </button>
+                <button type="button" onClick={() => setShowPayForm(false)} className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              <button onClick={() => setShowPayForm(true)}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 transition">
+                <CheckCircle className="w-4 h-4" /> Record Payment
+              </button>
+            )}
+          </div>
+        )}
 
         {po.status !== 'cancelled' && po.status !== 'delivered' && (
           <div className="flex gap-2 flex-wrap">
@@ -1343,8 +1667,8 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
   )
 }
 
-function CreateGRNModal({ tenantId, onClose, onSaved }: {
-  tenantId: string; onClose: () => void; onSaved: () => void
+function CreateGRNModal({ tenantId, editGRN, onClose, onSaved }: {
+  tenantId: string; editGRN?: GoodsReceivedNote | null; onClose: () => void; onSaved: () => void
 }) {
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
@@ -1352,8 +1676,11 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
   const [pos, setPos] = useState<PurchaseOrder[]>([])
   const [poItems, setPoItems] = useState<PurchaseOrderItem[]>([])
   const [form, setForm] = useState({
-    supplier_id: '', purchase_order_id: '', supplier_invoice_ref: '',
-    received_date: new Date().toISOString().slice(0, 10), notes: '',
+    supplier_id: editGRN?.supplier_id ?? '',
+    purchase_order_id: editGRN?.purchase_order_id ?? '',
+    supplier_invoice_ref: editGRN?.supplier_invoice_ref ?? '',
+    received_date: editGRN?.received_date ?? new Date().toISOString().slice(0, 10),
+    notes: editGRN?.notes ?? '',
   })
   const [items, setItems] = useState<Array<{
     product_id: string; product_name: string; po_item_id: string
@@ -1367,6 +1694,26 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
   }, [tenantId])
 
   useEffect(() => {
+    if (!editGRN) return
+    supabase.from('grn_items').select('*').eq('grn_id', editGRN.id)
+      .then(({ data }) => {
+        setItems(((data as GRNItem[]) ?? []).map((it) => ({
+          product_id: it.product_id ?? '',
+          product_name: it.product_name,
+          po_item_id: it.po_item_id ?? '',
+          ordered_qty: it.ordered_qty,
+          received_qty: it.received_qty,
+          damaged_qty: it.damaged_qty,
+          unit_cost: it.unit_cost,
+          vat_rate: it.vat_rate,
+          batch_number: it.batch_number ?? '',
+          expiry_date: it.expiry_date ?? '',
+        })))
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editGRN?.id])
+
+  useEffect(() => {
     if (!form.supplier_id) { setPos([]); return }
     supabase.from('purchase_orders').select('id,po_number').eq('tenant_id', tenantId)
       .eq('supplier_id', form.supplier_id).in('status', ['sent', 'approved', 'partial'])
@@ -1374,6 +1721,10 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
   }, [form.supplier_id, tenantId])
 
   useEffect(() => {
+    // In edit mode, items come from the GRN's own saved grn_items (loaded
+    // separately above) — don't let re-deriving defaults from the linked PO
+    // clobber what was actually recorded as received.
+    if (editGRN) return
     if (!form.purchase_order_id) { setPoItems([]); setItems([]); return }
     supabase.from('purchase_order_items').select('*').eq('purchase_order_id', form.purchase_order_id)
       .then(({ data }) => {
@@ -1392,7 +1743,8 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
           expiry_date: '',
         })))
       })
-  }, [form.purchase_order_id])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.purchase_order_id, editGRN])
 
   function addItem() {
     setItems((prev) => [...prev, {
@@ -1409,11 +1761,53 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
   const totalCost = items.reduce((s, it) => s + it.received_qty * it.unit_cost, 0)
   const vatTotal = items.reduce((s, it) => s + it.received_qty * it.unit_cost * it.vat_rate / 100, 0)
 
+  function buildGRNItems(grnId: string) {
+    return items.map((it) => ({
+      grn_id: grnId,
+      tenant_id: tenantId,
+      product_id: it.product_id || null,
+      po_item_id: it.po_item_id || null,
+      product_name: it.product_name,
+      ordered_qty: it.ordered_qty,
+      received_qty: it.received_qty,
+      damaged_qty: it.damaged_qty,
+      unit_cost: it.unit_cost,
+      vat_rate: it.vat_rate,
+      total_cost: it.received_qty * it.unit_cost,
+      batch_number: it.batch_number || null,
+      expiry_date: it.expiry_date || null,
+    }))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.supplier_id) { toast.error('Select a supplier'); return }
     if (items.length === 0) { toast.error('Add at least one item'); return }
     setLoading(true)
+
+    if (editGRN) {
+      const { error: updateError } = await supabase.from('goods_received_notes').update({
+        supplier_id: form.supplier_id,
+        purchase_order_id: form.purchase_order_id || null,
+        supplier_invoice_ref: form.supplier_invoice_ref || null,
+        received_date: form.received_date,
+        total_cost: totalCost,
+        vat_amount: vatTotal,
+        notes: form.notes || null,
+      }).eq('id', editGRN.id)
+      if (updateError) { toast.error(updateError.message); setLoading(false); return }
+
+      const { error: delErr } = await supabase.from('grn_items').delete().eq('grn_id', editGRN.id)
+      if (delErr) { toast.error(delErr.message); setLoading(false); return }
+
+      const { error: itemsErr } = await supabase.from('grn_items').insert(buildGRNItems(editGRN.id))
+      setLoading(false)
+      if (itemsErr) { toast.error(itemsErr.message); return }
+      toast.success('GRN updated')
+      onSaved()
+      return
+    }
+
     const { data: grnNum, error: numErr } = await supabase.rpc('generate_grn_number', { p_tenant_id: tenantId })
     if (numErr) { toast.error(numErr.message); setLoading(false); return }
 
@@ -1432,22 +1826,7 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
 
     if (grnErr || !grn) { toast.error(grnErr?.message ?? 'Failed to create GRN'); setLoading(false); return }
 
-    const grnItems = items.map((it) => ({
-      grn_id: grn.id,
-      tenant_id: tenantId,
-      product_id: it.product_id || null,
-      po_item_id: it.po_item_id || null,
-      product_name: it.product_name,
-      ordered_qty: it.ordered_qty,
-      received_qty: it.received_qty,
-      damaged_qty: it.damaged_qty,
-      unit_cost: it.unit_cost,
-      vat_rate: it.vat_rate,
-      total_cost: it.received_qty * it.unit_cost,
-      batch_number: it.batch_number || null,
-      expiry_date: it.expiry_date || null,
-    }))
-    const { error: itemsErr } = await supabase.from('grn_items').insert(grnItems)
+    const { error: itemsErr } = await supabase.from('grn_items').insert(buildGRNItems(grn.id))
     setLoading(false)
     if (itemsErr) { toast.error(itemsErr.message); return }
     toast.success('GRN created. Confirm it to update stock.')
@@ -1457,7 +1836,7 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
   const ic = 'w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
 
   return (
-    <ModalShell title="New Goods Received Note" onClose={onClose} maxW="max-w-3xl">
+    <ModalShell title={editGRN ? `Edit GRN: ${editGRN.grn_number}` : 'New Goods Received Note'} onClose={onClose} maxW="max-w-3xl">
       <form onSubmit={handleSubmit} className="p-5 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -1562,7 +1941,7 @@ function CreateGRNModal({ tenantId, onClose, onSaved }: {
           <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-medium text-sm">Cancel</button>
           <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            Save GRN Draft
+            {editGRN ? 'Save Changes' : 'Save GRN Draft'}
           </button>
         </div>
       </form>

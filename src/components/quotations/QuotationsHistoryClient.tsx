@@ -6,6 +6,7 @@ import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import QuotationModal, { type QuotationLineItem } from '@/components/pos/QuotationModal'
+import ExportMenu from '@/components/shared/ExportMenu'
 
 interface Quotation {
   id: string
@@ -74,6 +75,34 @@ export default function QuotationsHistoryClient({ quotations, tenantName, tenant
 
   return (
     <>
+      <div className="flex justify-end mb-3">
+        <ExportMenu
+          columns={[
+            { header: 'Quote #', key: 'quote_number', width: 16 },
+            { header: 'Customer', key: 'customer_name', width: 20 },
+            { header: 'Status', key: 'status', width: 12 },
+            { header: 'Subtotal', key: 'subtotal', width: 12 },
+            { header: 'Discount', key: 'discount_amount', width: 12 },
+            { header: 'VAT', key: 'tax_amount', width: 12 },
+            { header: 'Total', key: 'total_amount', width: 12 },
+            { header: 'Valid Until', key: 'valid_until', width: 14 },
+            { header: 'Date', key: 'created_at', width: 20 },
+          ]}
+          rows={quotations.map((q) => ({
+            quote_number: q.quote_number,
+            customer_name: q.customer?.name || 'Walk-in',
+            status: q.status ?? 'draft',
+            subtotal: q.subtotal,
+            discount_amount: q.discount_amount,
+            tax_amount: q.tax_amount,
+            total_amount: q.total_amount,
+            valid_until: q.valid_until ?? '',
+            created_at: formatDateTime(q.created_at),
+          }))}
+          filename={`quotations-${new Date().toISOString().slice(0, 10)}`}
+          title="Quotations Report"
+        />
+      </div>
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden transition-colors">
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-800">

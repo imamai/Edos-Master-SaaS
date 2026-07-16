@@ -400,6 +400,8 @@ export interface PurchaseOrder {
   vat_amount: number
   discount_amount: number
   total_amount: number
+  payment_status: 'unpaid' | 'partial' | 'paid'
+  amount_paid: number
   expected_delivery_date: string | null
   notes: string | null
   email_sent_at: string | null

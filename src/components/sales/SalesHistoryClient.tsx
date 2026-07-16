@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { formatCurrency, formatDateTime } from '@/lib/utils'
 import ReceiptModal from '@/components/pos/ReceiptModal'
+import ExportMenu from '@/components/shared/ExportMenu'
 
 interface Sale {
   id: string
@@ -39,6 +40,30 @@ export default function SalesHistoryClient({ sales, tenantName, tenantAddress, t
 
   return (
     <>
+      <div className="flex justify-end mb-3">
+        <ExportMenu
+          columns={[
+            { header: 'Receipt #', key: 'receipt_number', width: 16 },
+            { header: 'Customer', key: 'customer_name', width: 20 },
+            { header: 'Cashier', key: 'cashier_name', width: 18 },
+            { header: 'Payment Method', key: 'payment_method', width: 14 },
+            { header: 'M-Pesa Receipt', key: 'mpesa_receipt', width: 16 },
+            { header: 'Total', key: 'total_amount', width: 12 },
+            { header: 'Date & Time', key: 'created_at', width: 20 },
+          ]}
+          rows={sales.map((s) => ({
+            receipt_number: s.receipt_number,
+            customer_name: s.customer?.name || 'Walk-in',
+            cashier_name: s.cashier?.full_name || '—',
+            payment_method: s.payment_method,
+            mpesa_receipt: s.mpesa_receipt || '',
+            total_amount: s.total_amount,
+            created_at: formatDateTime(s.created_at),
+          }))}
+          filename={`sales-history-${new Date().toISOString().slice(0, 10)}`}
+          title="Sales History Report"
+        />
+      </div>
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 overflow-hidden transition-colors">
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-slate-800 border-b border-gray-200 dark:border-slate-800">

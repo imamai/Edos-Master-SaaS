@@ -83,26 +83,26 @@ export default function EtimsSettingsClient({ tenantId, initialSettings }: Props
 
       {/* Status banner */}
       {settings?.is_enabled ? (
-        <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
+        <div className="flex items-start gap-3 bg-green-50 border border-green-200 rounded-xl p-4 dark:bg-green-950/30 dark:border-green-900">
           <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-green-800">eTIMS Active</p>
-            <p className="text-xs text-green-700 mt-0.5">
+            <p className="text-sm font-semibold text-green-800 dark:text-green-300">eTIMS Active</p>
+            <p className="text-xs text-green-700 mt-0.5 dark:text-green-400">
               {settings.initialized_at
                 ? `Device initialised on ${new Date(settings.initialized_at).toLocaleDateString()}`
                 : 'Device not yet initialised – click "Initialise with KRA" below.'}
             </p>
-            <p className="text-xs text-green-600 mt-1">
+            <p className="text-xs text-green-600 mt-1 dark:text-green-400">
               Next invoice #: <strong>{settings.next_invoice_no ?? 1}</strong>
             </p>
           </div>
         </div>
       ) : (
-        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4 dark:bg-amber-950/30 dark:border-amber-900">
           <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-amber-800">eTIMS Disabled</p>
-            <p className="text-xs text-amber-700 mt-0.5">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">eTIMS Disabled</p>
+            <p className="text-xs text-amber-700 mt-0.5 dark:text-amber-400">
               Enable eTIMS to automatically send tax invoices to KRA after every sale.
             </p>
           </div>
@@ -111,67 +111,67 @@ export default function EtimsSettingsClient({ tenantId, initialSettings }: Props
 
       {/* Settings form */}
       <form onSubmit={handleSubmit(onSave)} className="space-y-4">
-        <div className="border rounded-xl p-4 space-y-4">
+        <div className="border rounded-xl p-4 space-y-4 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold text-gray-900">Enable eTIMS</p>
-              <p className="text-xs text-gray-500 mt-0.5">Automatically submit invoices to KRA on each sale</p>
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">Enable eTIMS</p>
+              <p className="text-xs text-gray-500 mt-0.5 dark:text-slate-400">Automatically submit invoices to KRA on each sale</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input {...register('is_enabled')} type="checkbox" className="sr-only peer" />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:bg-slate-700" />
             </label>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">
             KRA PIN (TIN) <span className="text-red-500">*</span>
           </label>
           <input
             {...register('kra_pin')}
             placeholder="e.g. P051234567A"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
           />
-          <p className="text-xs text-gray-400 mt-1">Your Kenya Revenue Authority PIN number.</p>
+          <p className="text-xs text-gray-400 mt-1 dark:text-slate-500">Your Kenya Revenue Authority PIN number.</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Environment</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">Environment</label>
           <select
             {...register('environment')}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
           >
             <option value="sandbox">Sandbox (Testing)</option>
             <option value="production">Production (Live KRA)</option>
           </select>
-          <p className="text-xs text-gray-400 mt-1">Use sandbox while testing. Switch to production when going live.</p>
+          <p className="text-xs text-gray-400 mt-1 dark:text-slate-500">Use sandbox while testing. Switch to production when going live.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Branch ID (bhfId)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">Branch ID (bhfId)</label>
             <input
               {...register('branch_id')}
               placeholder="000"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
             />
-            <p className="text-xs text-gray-400 mt-1">Use 000 for main branch.</p>
+            <p className="text-xs text-gray-400 mt-1 dark:text-slate-500">Use 000 for main branch.</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Device Serial (VSCU)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1 dark:text-slate-200">Device Serial (VSCU)</label>
             <input
               {...register('device_serial')}
               placeholder="VSCU001"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500"
             />
-            <p className="text-xs text-gray-400 mt-1">Virtual SCU identifier.</p>
+            <p className="text-xs text-gray-400 mt-1 dark:text-slate-500">Virtual SCU identifier.</p>
           </div>
         </div>
 
-        <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl p-3">
+        <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-xl p-3 dark:bg-blue-950/30 dark:border-blue-900">
           <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-blue-700">
+          <p className="text-xs text-blue-700 dark:text-blue-400">
             eTIMS credentials are stored securely and never exposed to the browser.
             All invoice submissions are made server-side only.
           </p>
@@ -181,7 +181,7 @@ export default function EtimsSettingsClient({ tenantId, initialSettings }: Props
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
           >
             {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
             <ShieldCheck className="w-4 h-4" />
@@ -193,7 +193,7 @@ export default function EtimsSettingsClient({ tenantId, initialSettings }: Props
               type="button"
               onClick={handleInit}
               disabled={initialising}
-              className="flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+              className="flex items-center gap-2 border border-gray-300 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               {initialising ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Initialise with KRA
@@ -203,9 +203,9 @@ export default function EtimsSettingsClient({ tenantId, initialSettings }: Props
       </form>
 
       {/* Help section */}
-      <div className="border rounded-xl p-4 space-y-3">
-        <p className="text-sm font-semibold text-gray-800">Setup Steps</p>
-        <ol className="space-y-2 text-xs text-gray-600 list-decimal list-inside">
+      <div className="border rounded-xl p-4 space-y-3 dark:border-slate-700">
+        <p className="text-sm font-semibold text-gray-800 dark:text-white">Setup Steps</p>
+        <ol className="space-y-2 text-xs text-gray-600 list-decimal list-inside dark:text-slate-300">
           <li>Enter your KRA PIN and select Sandbox for testing.</li>
           <li>Click <strong>Save Settings</strong>, then <strong>Initialise with KRA</strong>.</li>
           <li>Complete a test sale in the POS — a tax invoice will be submitted automatically.</li>

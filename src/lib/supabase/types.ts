@@ -16678,6 +16678,7 @@ export type Database = {
       }
       purchase_orders: {
         Row: {
+          amount_paid: number
           approved_at: string | null
           approved_by: string | null
           branch_id: string | null
@@ -16690,6 +16691,7 @@ export type Database = {
           id: string
           notes: string | null
           paid_amount: number | null
+          payment_status: string
           po_number: string
           po_type: string
           received_date: string | null
@@ -16703,6 +16705,7 @@ export type Database = {
           vat_amount: number
         }
         Insert: {
+          amount_paid?: number
           approved_at?: string | null
           approved_by?: string | null
           branch_id?: string | null
@@ -16715,6 +16718,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_amount?: number | null
+          payment_status?: string
           po_number: string
           po_type?: string
           received_date?: string | null
@@ -16728,6 +16732,7 @@ export type Database = {
           vat_amount?: number
         }
         Update: {
+          amount_paid?: number
           approved_at?: string | null
           approved_by?: string | null
           branch_id?: string | null
@@ -16740,6 +16745,7 @@ export type Database = {
           id?: string
           notes?: string | null
           paid_amount?: number | null
+          payment_status?: string
           po_number?: string
           po_type?: string
           received_date?: string | null
@@ -16808,7 +16814,9 @@ export type Database = {
         Row: {
           discount_amount: number | null
           id: string
-          product_id: string
+          item_name: string | null
+          item_sku: string | null
+          product_id: string | null
           quantity: number
           quotation_id: string
           tax_amount: number | null
@@ -16818,7 +16826,9 @@ export type Database = {
         Insert: {
           discount_amount?: number | null
           id?: string
-          product_id: string
+          item_name?: string | null
+          item_sku?: string | null
+          product_id?: string | null
           quantity: number
           quotation_id: string
           tax_amount?: number | null
@@ -16828,7 +16838,9 @@ export type Database = {
         Update: {
           discount_amount?: number | null
           id?: string
-          product_id?: string
+          item_name?: string | null
+          item_sku?: string | null
+          product_id?: string | null
           quantity?: number
           quotation_id?: string
           tax_amount?: number | null

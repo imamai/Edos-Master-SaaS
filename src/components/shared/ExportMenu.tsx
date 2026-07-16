@@ -40,19 +40,19 @@ export default function ExportMenu({ columns, rows, filename, title, disabled }:
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={disabled || rows.length === 0}
-        className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 rounded-xl text-sm text-slate-600 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed"
+        className="flex items-center gap-1.5 px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
       >
         <Download className="w-4 h-4" />
         Export
         <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg z-30 min-w-36 overflow-hidden">
+        <div className="absolute right-0 top-full mt-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg z-30 min-w-36 overflow-hidden">
           {formats.map(({ value, label, icon: Icon, color }) => (
             <button
               key={value}
               onClick={() => handle(value)}
-              className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition"
+              className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
             >
               <Icon className={`w-4 h-4 ${color}`} />
               {label}

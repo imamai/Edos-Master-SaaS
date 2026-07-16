@@ -46,7 +46,7 @@ export default function ExpensesClient() {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Expenses</h1>
+        <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Expenses</h1>
         <div className="flex items-center gap-2">
           <ExportMenu
             columns={[
@@ -68,45 +68,45 @@ export default function ExpensesClient() {
 
       <div className="flex items-center gap-4">
         <input type="month" value={month} onChange={(e) => setMonth(e.target.value)}
-          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <div className="bg-red-50 rounded-xl px-4 py-2">
-          <p className="text-xs text-slate-500">Total Expenses</p>
-          <p className="font-bold text-red-600">{formatCurrency(total)}</p>
+          className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500" />
+        <div className="bg-red-50 rounded-xl px-4 py-2 dark:bg-red-950">
+          <p className="text-xs text-slate-500 dark:text-slate-400">Total Expenses</p>
+          <p className="font-bold text-red-600 dark:text-red-400">{formatCurrency(total)}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden dark:bg-slate-900 dark:border-slate-800">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50">
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Date</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Category</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Description</th>
-              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Payment</th>
-              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Amount</th>
+            <tr className="border-b border-slate-100 bg-slate-50 dark:border-slate-800 dark:bg-slate-800">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Date</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Category</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Description</th>
+              <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Payment</th>
+              <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase dark:text-slate-400">Amount</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i}><td colSpan={5} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse" /></td></tr>
+                <tr key={i}><td colSpan={5} className="px-4 py-3"><div className="h-4 bg-slate-100 rounded animate-pulse dark:bg-slate-800" /></td></tr>
               ))
             ) : expenses.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-12 text-slate-400">
+              <tr><td colSpan={5} className="text-center py-12 text-slate-400 dark:text-slate-500">
                 <Wallet className="w-10 h-10 mx-auto mb-2 opacity-40" /><p>No expenses this month</p>
               </td></tr>
             ) : (
               expenses.map((e) => (
-                <tr key={e.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-slate-600">{formatDateOnly(e.expense_date)}</td>
+                <tr key={e.id} className="hover:bg-slate-50 dark:hover:bg-slate-800">
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{formatDateOnly(e.expense_date)}</td>
                   <td className="px-4 py-3">
-                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
+                    <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full dark:bg-slate-800 dark:text-slate-300">
                       {e.category?.name ?? '—'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-slate-700">{e.description}</td>
-                  <td className="px-4 py-3 text-slate-500 capitalize text-sm">{e.payment_method}</td>
-                  <td className="px-4 py-3 text-right font-semibold text-red-600">{formatCurrency(e.amount)}</td>
+                  <td className="px-4 py-3 text-slate-700 dark:text-slate-200">{e.description}</td>
+                  <td className="px-4 py-3 text-slate-500 capitalize text-sm dark:text-slate-400">{e.payment_method}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-red-600 dark:text-red-400">{formatCurrency(e.amount)}</td>
                 </tr>
               ))
             )}
@@ -141,7 +141,7 @@ function ExpenseFormModal({ categories, tenantId, onClose, onSaved }: {
     expense_date: new Date().toISOString().split('T')[0],
   })
 
-  const ic = 'w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500'
+  const ic = 'w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder:text-slate-500'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -162,41 +162,41 @@ function ExpenseFormModal({ categories, tenantId, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <h3 className="font-bold text-slate-800">Record Expense</h3>
-          <button onClick={onClose}><X className="w-5 h-5 text-slate-400" /></button>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md dark:bg-slate-900">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
+          <h3 className="font-bold text-slate-800 dark:text-white">Record Expense</h3>
+          <button onClick={onClose}><X className="w-5 h-5 text-slate-400 dark:text-slate-500" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Category *</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">Category *</label>
             <select required value={form.category_id} onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))} className={ic}>
               <option value="">Select category...</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Amount (KES) *</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">Amount (KES) *</label>
             <input required type="number" min={0} step={0.01} value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} className={ic} />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Description *</label>
+            <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">Description *</label>
             <input required value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className={ic} placeholder="What was this expense for?" />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Payment Method</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">Payment Method</label>
               <select value={form.payment_method} onChange={(e) => setForm((f) => ({ ...f, payment_method: e.target.value }))} className={ic}>
                 {['cash', 'mpesa', 'card', 'bank'].map((m) => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Date</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">Date</label>
               <input type="date" value={form.expense_date} onChange={(e) => setForm((f) => ({ ...f, expense_date: e.target.value }))} className={ic} />
             </div>
           </div>
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium text-sm">Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium text-sm dark:bg-slate-800 dark:text-slate-200">Cancel</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2">
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               Record
