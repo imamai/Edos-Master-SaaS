@@ -39,12 +39,21 @@ export async function POST(_req: NextRequest) {
     return NextResponse.json({ error: 'Configure KRA PIN before initialising' }, { status: 422 })
   }
 
-  const response = await initDevice({
-    kra_pin:       etims.kra_pin,
-    branch_id:     etims.branch_id,
-    device_serial: etims.device_serial,
-    environment:   etims.environment,
-  })
+  let response
+  try {
+    response = await initDevice({
+      kra_pin:       etims.kra_pin,
+      branch_id:     etims.branch_id,
+      device_serial: etims.device_serial,
+      environment:   etims.environment,
+    })
+  } catch (err) {
+    console.error('[etims/init] KRA request failed:', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Could not reach KRA eTIMS servers. Try again shortly.' },
+      { status: 502 }
+    )
+  }
 
   if (!isSuccess(response)) {
     return NextResponse.json({ error: response.resultMsg, result_code: response.resultCd }, { status: 422 })

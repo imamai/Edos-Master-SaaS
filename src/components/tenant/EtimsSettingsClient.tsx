@@ -67,14 +67,19 @@ export default function EtimsSettingsClient({ tenantId, initialSettings }: Props
 
   const handleInit = async () => {
     setInit(true)
-    const res  = await fetch('/api/etims/init', { method: 'POST' })
-    const json = await res.json() as { ok?: boolean; error?: string; result_code?: string }
-    setInit(false)
-    if (json.ok) {
-      toast.success('Device initialised with KRA successfully')
-      setSettings((prev) => prev ? { ...prev, initialized_at: new Date().toISOString() } : prev)
-    } else {
-      toast.error(json.error || `KRA error code: ${json.result_code}`)
+    try {
+      const res  = await fetch('/api/etims/init', { method: 'POST' })
+      const json = await res.json() as { ok?: boolean; error?: string; result_code?: string }
+      if (json.ok) {
+        toast.success('Device initialised with KRA successfully')
+        setSettings((prev) => prev ? { ...prev, initialized_at: new Date().toISOString() } : prev)
+      } else {
+        toast.error(json.error || `KRA error code: ${json.result_code}`)
+      }
+    } catch {
+      toast.error('Could not reach the server. Check your connection and try again.')
+    } finally {
+      setInit(false)
     }
   }
 

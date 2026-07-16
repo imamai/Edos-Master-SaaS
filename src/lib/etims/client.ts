@@ -1,8 +1,8 @@
 // eTIMS HTTP client – server-side only (never import from client components)
 
 export const ETIMS_URLS = {
-  sandbox:    'https://etims-sbx.kra.go.ke/etims-api',
-  production: 'https://etims.kra.go.ke/etims-api',
+  sandbox:    'https://etims-api-sbx.kra.go.ke/etims-api',
+  production: 'https://etims-api.kra.go.ke/etims-api',
 } as const
 
 export interface EtimsSettings {
@@ -31,6 +31,7 @@ async function call(
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(body),
+    signal:  AbortSignal.timeout(15_000),
   })
 
   if (!res.ok) {

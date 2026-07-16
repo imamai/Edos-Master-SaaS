@@ -40,12 +40,12 @@ export default async function EtimsSettingsPage() {
     <div>
       <div className="flex items-center gap-3 mb-6">
         <Link href="/tenant/etims"
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+          className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-500 dark:text-gray-400 transition-colors">
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">eTIMS Settings</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Configure KRA eTIMS integration for this business</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">eTIMS Settings</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Configure KRA eTIMS integration for this business</p>
         </div>
       </div>
 

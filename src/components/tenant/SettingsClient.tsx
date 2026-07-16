@@ -406,28 +406,28 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Business Name</label>
-            <input {...register('name')} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input {...register('name')} className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Phone</label>
-            <input {...register('phone')} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <input {...register('phone')} className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Business Address</label>
             <textarea {...register('address')} rows={2} placeholder="Street, City, Country"
-              className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Shown on receipts, invoices and quotations.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">KRA PIN</label>
             <input {...register('kra_pin')} placeholder="e.g. P051234567A"
-              className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Kenya Revenue Authority PIN — shown on tax invoices and quotations.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Procurement Contact Email</label>
             <input {...register('procurement_email')} type="email" placeholder="orders@yourbusiness.com"
-              className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
               Where suppliers should reply when you email them Purchase Orders. Falls back to your account email if left blank.
             </p>
@@ -436,16 +436,16 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Brand Color</label>
             <div className="flex items-center gap-3">
               <input {...register('primary_color')} type="color" className="w-10 h-10 rounded cursor-pointer border" />
-              <input {...register('primary_color')} className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="#2563EB" />
+              <input {...register('primary_color')} className="flex-1 bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="#2563EB" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Receipt Header</label>
-            <textarea {...register('receipt_header')} rows={2} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            <textarea {...register('receipt_header')} rows={2} className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Receipt Footer</label>
-            <textarea {...register('receipt_footer')} rows={2} className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+            <textarea {...register('receipt_footer')} rows={2} className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
           </div>
 
           <div className="border rounded-xl p-4 space-y-4">
@@ -454,20 +454,20 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Payment Instructions</label>
               <textarea {...register('payment_instructions')} rows={2}
                 placeholder="e.g. Bank: KCB, Account: 1234567890, M-Pesa Till: 123456"
-                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Shown on invoices for customer payment reference.</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Quotation Notes</label>
               <textarea {...register('quotation_notes')} rows={2}
                 placeholder="e.g. Prices valid for 14 days. Subject to stock availability."
-                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Invoice Terms & Conditions</label>
               <textarea {...register('invoice_terms')} rows={2}
                 placeholder="e.g. Goods once sold are not returnable without invoice within 7 days."
-                className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
             </div>
           </div>
 
@@ -479,11 +479,11 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tax Name</label>
-                <input {...register('tax_name')} placeholder="VAT" className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input {...register('tax_name')} placeholder="VAT" className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
               <div>
                 <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Tax Rate (%)</label>
-                <input {...register('tax_rate')} type="number" min="0" max="100" step="0.1" className="w-full border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input {...register('tax_rate')} type="number" min="0" max="100" step="0.1" className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
             </div>
           </div>
@@ -520,7 +520,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                   value={newCatName}
                   onChange={(e) => setNewCatName(e.target.value)}
                   placeholder="Category name"
-                  className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   onKeyDown={(e) => e.key === 'Enter' && addCategory()}
                 />
                 <div className="flex items-center gap-2">
@@ -562,7 +562,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                       <input
                         value={editCatName}
                         onChange={(e) => setEditCatName(e.target.value)}
-                        className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                         onKeyDown={(e) => e.key === 'Enter' && saveEditCategory(cat.id)}
                         autoFocus
                       />
@@ -630,10 +630,10 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                   onChange={(e) => setInviteEmail(e.target.value)}
                   type="email"
                   placeholder="Email address"
-                  className="flex-1 border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
-                  className="border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize">
+                  className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize">
                   {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
@@ -871,7 +871,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                       onChange={e => setMpesaSettings(s => ({ ...s, consumer_key: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="Daraja app consumer key"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
+                      className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
 
@@ -883,7 +883,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                       onChange={e => setMpesaSettings(s => ({ ...s, consumer_secret: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="Daraja app consumer secret"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
+                      className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
 
@@ -895,7 +895,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                       onChange={e => setMpesaSettings(s => ({ ...s, shortcode: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="e.g. 174379"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
+                      className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
 
@@ -907,7 +907,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                       onChange={e => setMpesaSettings(s => ({ ...s, passkey: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="STK Push passkey"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
+                      className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
                 </div>
@@ -927,7 +927,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                       onChange={e => setMpesaSettings(s => ({ ...s, initiator_name: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="B2C initiator name"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
+                      className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
                   <div>
@@ -938,7 +938,7 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                       onChange={e => setMpesaSettings(s => ({ ...s, security_credential: e.target.value }))}
                       disabled={!canManageMpesa}
                       placeholder="Encrypted security credential"
-                      className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
+                      className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:outline-none disabled:bg-gray-50 dark:disabled:bg-slate-800"
                     />
                   </div>
                 </div>
