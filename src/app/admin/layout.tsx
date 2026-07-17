@@ -9,7 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!user) {
     const loginBase = process.env.NODE_ENV === 'development'
       ? 'http://localhost:3000'
-      : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'}`
+      : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edoscentre.co.ke'}`
     redirect(`${loginBase}/login`)
   }
 

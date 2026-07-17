@@ -7,7 +7,7 @@ export default async function TenantLayout({ children }: { children: React.React
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edos.co.ke'
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'edoscentre.co.ke'
   const isDev = process.env.NODE_ENV === 'development'
   const loginUrl = isDev
     ? 'http://localhost:3000/login'
@@ -42,17 +42,10 @@ export default async function TenantLayout({ children }: { children: React.React
       : `https://${tenant.subdomain}.${rootDomain}`)
   }
 
-  if (tenant.status === 'suspended') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-bold text-red-700 mb-2">Account Suspended</h1>
-          <p className="text-gray-600">Please contact support to reactivate your account.</p>
-        </div>
-      </div>
-    )
-  }
-
+  // middleware.ts already restricts a suspended tenant to /settings and
+  // /support before any other /tenant/* route is reachable — render the
+  // normal shell here (with sidebar/logout) so those allowed pages work,
+  // TenantTopbar shows a persistent suspended banner.
   return (
     <TenantShell tenant={tenant} profile={profile}>
       {children}

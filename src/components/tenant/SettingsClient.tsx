@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -49,7 +50,12 @@ const ROLES = ['cashier', 'staff', 'manager', 'owner'] as const
 const tabs = ['Business', 'Categories', 'Staff', 'Billing', 'Branches', 'M-Pesa']
 
 export default function SettingsClient({ tenant, plans, staff: initialStaff, branches, currentUserId, currentUserRole }: Props) {
-  const [activeTab, setActiveTab] = useState('Business')
+  const isSuspended = tenant.status === 'suspended'
+  const searchParams = useSearchParams()
+  const initialTab = isSuspended
+    ? 'Billing'
+    : tabs.includes(searchParams.get('tab') ?? '') ? (searchParams.get('tab') as string) : 'Business'
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'semiannual' | 'yearly'>('monthly')
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null)
   const supabase = createClient()
@@ -279,6 +285,55 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
     else { const err = await res.json(); toast.error(err.message) }
   }
 
+  const [mpesaPhone, setMpesaPhone] = useState('')
+  const [mpesaPaying, setMpesaPaying] = useState(false)
+
+  const handlePayViaMpesa = async () => {
+    if (!mpesaPhone.trim()) { toast.error('Enter your M-Pesa phone number'); return }
+    setMpesaPaying(true)
+    const res = await fetch('/api/billing/mpesa/initiate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: mpesaPhone.trim() }),
+    })
+    const body = await res.json()
+    setMpesaPaying(false)
+    if (res.ok) toast.success(body.message || 'Check your phone to complete the payment')
+    else toast.error(body.error || 'Could not start the M-Pesa payment')
+  }
+
+  const [bankReference, setBankReference] = useState('')
+  const [bankProofFile, setBankProofFile] = useState<File | null>(null)
+  const [bankSubmitting, setBankSubmitting] = useState(false)
+
+  const handleSubmitBankTransfer = async () => {
+    if (!bankReference.trim()) { toast.error('Enter the bank transaction reference'); return }
+    setBankSubmitting(true)
+    try {
+      let proofPath: string | undefined
+      if (bankProofFile) {
+        const path = `${tenant.id}/${Date.now()}-${bankProofFile.name}`
+        const { error: uploadError } = await supabase.storage.from('billing-proofs').upload(path, bankProofFile)
+        if (uploadError) throw new Error(uploadError.message)
+        proofPath = path
+      }
+      const res = await fetch('/api/billing/bank-transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: bankReference.trim(), proofPath }),
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || 'Could not submit')
+      toast.success(body.message || 'Submitted — we will confirm your payment shortly.')
+      setBankReference('')
+      setBankProofFile(null)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not submit')
+    } finally {
+      setBankSubmitting(false)
+    }
+  }
+
   // ── Categories CRUD ──────────────────────────────────────
   async function addCategory() {
     if (!newCatName.trim()) return
@@ -409,9 +464,18 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
 
   return (
     <div>
+      {isSuspended && (
+        <div className="mb-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 rounded-xl p-4">
+          <p className="text-sm font-semibold text-red-800 dark:text-red-300">Account suspended</p>
+          <p className="text-xs text-red-700 dark:text-red-400 mt-1">
+            Renew your subscription below to restore full access to your dashboard, POS, inventory and reports.
+          </p>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-1 border-b mb-6 overflow-x-auto">
-        {tabs.map((tab) => (
+        {(isSuspended ? ['Billing'] : tabs).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -918,6 +982,50 @@ export default function SettingsClient({ tenant, plans, staff: initialStaff, bra
                 </div>
               )
             })}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mt-8">
+            <div className="border rounded-xl p-4 space-y-3 dark:border-slate-700">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Pay via M-Pesa</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                We&apos;ll charge your current plan&apos;s renewal amount to the phone number below via STK push.
+              </p>
+              <input
+                value={mpesaPhone}
+                onChange={(e) => setMpesaPhone(e.target.value)}
+                placeholder="e.g. 0712345678"
+                className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <button onClick={handlePayViaMpesa} disabled={mpesaPaying}
+                className="w-full py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                {mpesaPaying && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Pay with M-Pesa
+              </button>
+            </div>
+
+            <div className="border rounded-xl p-4 space-y-3 dark:border-slate-700">
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Pay via Bank Transfer</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Submit your transaction reference (and optionally a proof screenshot) — we&apos;ll confirm and renew your account shortly.
+              </p>
+              <input
+                value={bankReference}
+                onChange={(e) => setBankReference(e.target.value)}
+                placeholder="Bank transaction reference"
+                className="w-full bg-white dark:bg-slate-900 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => setBankProofFile(e.target.files?.[0] ?? null)}
+                className="w-full text-xs text-gray-500 dark:text-gray-400"
+              />
+              <button onClick={handleSubmitBankTransfer} disabled={bankSubmitting}
+                className="w-full py-2 border-2 border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-950 disabled:opacity-50 flex items-center justify-center gap-2">
+                {bankSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Submit
+              </button>
+            </div>
           </div>
         </div>
       )}

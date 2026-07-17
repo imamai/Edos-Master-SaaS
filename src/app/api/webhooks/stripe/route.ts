@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { constructWebhookEvent } from '@/lib/stripe'
+import { applySubscriptionPayment } from '@/lib/billing/applyPayment'
 import Stripe from 'stripe'
 import type { Database } from '@/lib/supabase/types'
 
@@ -44,34 +45,28 @@ export async function POST(req: NextRequest) {
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object as Stripe.Invoice
         const tenantId = invoice.metadata?.tenant_id || invoice.subscription_details?.metadata?.tenant_id
+        const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
 
-        if (tenantId) {
-          await supabaseAdmin.from('tenants').update({ status: 'active' }).eq('id', tenantId)
+        if (tenantId && subId) {
+          const { data: sub } = await supabaseAdmin
+            .from('subscriptions')
+            .select('id')
+            .eq('stripe_subscription_id', subId)
+            .single()
 
-          const subId = typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id
-          if (subId) {
-            await supabaseAdmin
-              .from('subscriptions')
-              .update({
-                status: 'active',
-                last_payment_at: new Date().toISOString(),
-                last_payment_amount: (invoice.amount_paid || 0) / 100,
-                failed_payment_count: 0,
-              })
-              .eq('stripe_subscription_id', subId)
+          if (sub) {
+            // Delegate to the shared apply-payment path so a Stripe renewal
+            // extends the period / reactivates the tenant / emails a receipt
+            // exactly the same way an M-Pesa, bank transfer, or manual
+            // payment does — idempotent via invoice.id as the reference.
+            await applySubscriptionPayment({
+              tenantId,
+              subscriptionId: sub.id,
+              amount: (invoice.amount_paid || 0) / 100,
+              method: 'stripe',
+              providerReference: invoice.id ?? `stripe-${event.id}`,
+            })
           }
-
-          // Create invoice record
-          await supabaseAdmin.from('invoices').insert({
-            tenant_id: tenantId,
-            invoice_number: invoice.number || `INV-${Date.now()}`,
-            amount: (invoice.amount_paid || 0) / 100,
-            currency: (invoice.currency || 'kes').toUpperCase(),
-            status: 'paid',
-            due_date: new Date(invoice.due_date ? invoice.due_date * 1000 : Date.now()).toISOString(),
-            paid_at: new Date().toISOString(),
-            stripe_invoice_id: invoice.id,
-          })
         }
         break
       }

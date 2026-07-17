@@ -29,24 +29,20 @@ export async function POST(req: NextRequest) {
 
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('id, name, owner_email, owner_name')
+    .select('id, name, owner_email, owner_name, stripe_customer_id')
     .eq('id', profile.tenant_id)
     .single()
 
   if (!tenant) return NextResponse.json({ message: 'Tenant not found' }, { status: 404 })
 
-  // Get or create Stripe customer
-  const { data: subscription } = await supabase
-    .from('subscriptions')
-    .select('stripe_customer_id')
-    .eq('tenant_id', profile.tenant_id)
-    .single()
-
-  let customerId = subscription?.stripe_customer_id
+  // Get or create Stripe customer — stripe_customer_id lives on tenants,
+  // not subscriptions (a tenant may not have a subscriptions row yet)
+  let customerId = tenant.stripe_customer_id
 
   if (!customerId) {
     const customer = await createStripeCustomer(tenant.owner_email, tenant.owner_name, tenant.id)
     customerId = customer.id
+    await supabaseAdmin.from('tenants').update({ stripe_customer_id: customerId }).eq('id', tenant.id)
   }
 
   const origin = req.headers.get('origin') || `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`

@@ -67,12 +67,12 @@ export async function POST(req: NextRequest) {
     // Get the selected plan (fall back to basic if not specified or not found)
     const { data: basicPlan } = await supabaseAdmin
       .from('plans')
-      .select('id')
+      .select('id, price_monthly')
       .eq('slug', plan_slug || 'basic')
       .maybeSingle()
       .then(async (result) => {
         if (result.data) return result
-        return supabaseAdmin.from('plans').select('id').eq('slug', 'basic').single()
+        return supabaseAdmin.from('plans').select('id, price_monthly').eq('slug', 'basic').single()
       })
 
     // Create tenant
@@ -100,6 +100,19 @@ export async function POST(req: NextRequest) {
       await supabaseAdmin.auth.admin.deleteUser(user_id)
       return NextResponse.json({ message: 'Failed to create tenant' }, { status: 500 })
     }
+
+    // Create the subscription row up front so the reminder engine and
+    // billing portal have consistent data for every tenant from day one
+    await supabaseAdmin.from('subscriptions').insert({
+      tenant_id: tenant.id,
+      plan_id: basicPlan?.id,
+      status: 'trialing',
+      billing_cycle: 'monthly',
+      current_period_start: new Date().toISOString(),
+      current_period_end: trialEnd.toISOString(),
+      amount: basicPlan?.price_monthly ?? 0,
+      currency: 'KES',
+    })
 
     // Create main branch
     const { data: branch } = await supabaseAdmin
@@ -156,11 +169,21 @@ export async function POST(req: NextRequest) {
     if (confirmUrl) {
       if (process.env.RESEND_API_KEY) {
         const resend = new Resend(process.env.RESEND_API_KEY)
-        await resend.emails.send({
+        const subject = 'Confirm your EdosPoa account'
+        const { data: sent, error: sendError } = await resend.emails.send({
           from: process.env.EMAIL_FROM || 'EdosPoa <noreply@edos.co.ke>',
           to: owner_email,
-          subject: 'Confirm your EdosPoa account',
+          subject,
           html: buildConfirmEmail(owner_name, name, confirmUrl),
+        })
+        await supabaseAdmin.from('email_logs').insert({
+          tenant_id: tenant.id,
+          recipient: owner_email,
+          template: 'welcome',
+          subject,
+          provider_message_id: sent?.id ?? null,
+          status: sendError ? 'failed' : 'sent',
+          error: sendError?.message ?? null,
         })
       } else {
         // Dev fallback when RESEND_API_KEY is not set

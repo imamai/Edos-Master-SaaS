@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as adminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { requireActiveTenant } from '@/lib/billing/guard'
 
 function serviceClient() {
   return adminClient(
@@ -31,6 +32,14 @@ export async function POST(req: NextRequest) {
 
     const tenantId = profile.tenant_id
     const branchId = profile.branch_id ?? null
+
+    // Defense-in-depth: middleware already blocks suspended tenants at the
+    // edge, this guards the same invariant server-side.
+    try {
+      await requireActiveTenant(tenantId)
+    } catch {
+      return NextResponse.json({ error: 'This account has been suspended. Renew your subscription to continue.' }, { status: 403 })
+    }
 
     const { saleData, items, payments } = await req.json()
 

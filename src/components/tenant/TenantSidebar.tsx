@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import {
   ShoppingCart, Package, Receipt, Users, TrendingDown,
   BarChart3, Settings, LogOut, Store, LayoutDashboard, ShieldCheck,
-  ShoppingBag, ChevronDown, Sun, Moon
+  ShoppingBag, ChevronDown, Sun, Moon, LifeBuoy
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useState } from 'react'
@@ -73,6 +73,7 @@ export default function TenantSidebar({ tenant, profile, open = false, onClose }
     { href: `${base}/reports`, label: 'Reports', icon: BarChart3 },
     { href: `${base}/etims`, label: 'eTIMS', icon: ShieldCheck },
     { href: `${base}/settings`, label: 'Settings', icon: Settings },
+    { href: `${base}/support`, label: 'Support', icon: LifeBuoy },
   ]
 
   const handleSignOut = async () => {

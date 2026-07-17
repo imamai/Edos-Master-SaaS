@@ -81,15 +81,29 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // A suspended tenant keeps access only to billing/renewal, support, and
+  // logout — everything else (dashboard, POS, inventory, reports, APIs) is
+  // blocked. Login is unaffected (handled separately, before a session even
+  // resolves a tenant). Redirects stay on the tenant's own subdomain so the
+  // billing page they land on actually works, instead of bouncing to a
+  // separate root-domain page.
   if (tenant.status === 'suspended') {
-    if (pathname.startsWith('/api')) {
-      return NextResponse.json({ message: 'This account has been suspended.' }, { status: 403 })
+    const allowedPagePrefixes = ['/settings', '/support']
+    const allowedApiPrefixes = ['/api/billing']
+    const isApi = pathname.startsWith('/api')
+    const isAllowed = isApi
+      ? allowedApiPrefixes.some((p) => pathname.startsWith(p))
+      : allowedPagePrefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+
+    if (!isAllowed) {
+      if (isApi) {
+        return NextResponse.json({ message: 'This account has been suspended. Renew your subscription to continue.' }, { status: 403 })
+      }
+      const url = request.nextUrl.clone()
+      url.pathname = '/settings'
+      url.search = 'tab=Billing'
+      return NextResponse.redirect(url)
     }
-    const url = request.nextUrl.clone()
-    url.pathname = `/suspended`
-    url.hostname = ROOT_DOMAIN
-    url.port = ''
-    return NextResponse.redirect(url)
   }
 
   if (pathname.startsWith('/api')) {

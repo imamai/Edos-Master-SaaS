@@ -12472,6 +12472,57 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          provider_message_id: string | null
+          recipient: string
+          status: string
+          subject: string
+          template: string
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_message_id?: string | null
+          recipient: string
+          status?: string
+          subject: string
+          template: string
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider_message_id?: string | null
+          recipient?: string
+          status?: string
+          subject?: string
+          template?: string
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_farm_daily_dashboard"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       eod_closures: {
         Row: {
           branch_id: string
@@ -12710,18 +12761,36 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          tenant_id: string | null
         }
         Insert: {
           description?: string | null
           id?: string
           name: string
+          tenant_id?: string | null
         }
         Update: {
           description?: string | null
           id?: string
           name?: string
+          tenant_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_categories_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_farm_daily_dashboard"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
       }
       expenses: {
         Row: {
@@ -14568,7 +14637,9 @@ export type Database = {
           billing_reason: string | null
           created_at: string
           currency: string | null
+          due_date: string | null
           id: string
+          invoice_number: string | null
           paid_at: string | null
           period_end: string | null
           period_start: string | null
@@ -14582,7 +14653,9 @@ export type Database = {
           billing_reason?: string | null
           created_at?: string
           currency?: string | null
+          due_date?: string | null
           id?: string
+          invoice_number?: string | null
           paid_at?: string | null
           period_end?: string | null
           period_start?: string | null
@@ -14596,7 +14669,9 @@ export type Database = {
           billing_reason?: string | null
           created_at?: string
           currency?: string | null
+          due_date?: string | null
           id?: string
+          invoice_number?: string | null
           paid_at?: string | null
           period_end?: string | null
           period_start?: string | null
@@ -15286,6 +15361,55 @@ export type Database = {
           },
           {
             foreignKeyName: "nhif_claims_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_farm_daily_dashboard"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      notification_logs: {
+        Row: {
+          id: string
+          notification_type: string
+          period_end: string
+          sent_at: string
+          subscription_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          id?: string
+          notification_type: string
+          period_end: string
+          sent_at?: string
+          subscription_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          id?: string
+          notification_type?: string
+          period_end?: string
+          sent_at?: string
+          subscription_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_logs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_logs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "vw_farm_daily_dashboard"
@@ -17488,15 +17612,174 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_audit_logs: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_type: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          subscription_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_type: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          subscription_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_type?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          subscription_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_audit_logs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_audit_logs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_farm_daily_dashboard"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      subscription_payments: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          created_at: string
+          currency: string
+          id: string
+          invoice_id: string | null
+          method: string
+          notes: string | null
+          proof_url: string | null
+          provider_reference: string | null
+          status: string
+          subscription_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_id?: string | null
+          method: string
+          notes?: string | null
+          proof_url?: string | null
+          provider_reference?: string | null
+          status?: string
+          subscription_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_id?: string | null
+          method?: string
+          notes?: string | null
+          proof_url?: string | null
+          provider_reference?: string | null
+          status?: string
+          subscription_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_payments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_farm_daily_dashboard"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           amount: number | null
           billing_cycle: string | null
+          cancel_at_period_end: boolean
+          cancelled_at: string | null
           created_at: string
           currency: string | null
           current_period_end: string | null
           current_period_start: string | null
+          failed_payment_count: number
           id: string
+          last_payment_amount: number | null
+          last_payment_at: string | null
+          pending_billing_cycle: string | null
+          pending_plan_id: string | null
           plan_id: string | null
           status: string
           stripe_price_id: string | null
@@ -17507,11 +17790,18 @@ export type Database = {
         Insert: {
           amount?: number | null
           billing_cycle?: string | null
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
           created_at?: string
           currency?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
+          failed_payment_count?: number
           id?: string
+          last_payment_amount?: number | null
+          last_payment_at?: string | null
+          pending_billing_cycle?: string | null
+          pending_plan_id?: string | null
           plan_id?: string | null
           status?: string
           stripe_price_id?: string | null
@@ -17522,11 +17812,18 @@ export type Database = {
         Update: {
           amount?: number | null
           billing_cycle?: string | null
+          cancel_at_period_end?: boolean
+          cancelled_at?: string | null
           created_at?: string
           currency?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
+          failed_payment_count?: number
           id?: string
+          last_payment_amount?: number | null
+          last_payment_at?: string | null
+          pending_billing_cycle?: string | null
+          pending_plan_id?: string | null
           plan_id?: string | null
           status?: string
           stripe_price_id?: string | null
@@ -17535,6 +17832,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_pending_plan_id_fkey"
+            columns: ["pending_plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "subscriptions_plan_id_fkey"
             columns: ["plan_id"]
@@ -17873,6 +18177,7 @@ export type Database = {
           created_at: string
           currency: string
           custom_domain: string | null
+          grace_period_days: number
           grace_period_ends_at: string | null
           id: string
           logo_url: string | null
@@ -17902,6 +18207,7 @@ export type Database = {
           created_at?: string
           currency?: string
           custom_domain?: string | null
+          grace_period_days?: number
           grace_period_ends_at?: string | null
           id?: string
           logo_url?: string | null
@@ -17931,6 +18237,7 @@ export type Database = {
           created_at?: string
           currency?: string
           custom_domain?: string | null
+          grace_period_days?: number
           grace_period_ends_at?: string | null
           id?: string
           logo_url?: string | null
