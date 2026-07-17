@@ -10,7 +10,7 @@ import { useTenantId } from '@/lib/hooks/useTenantId'
 
 interface Customer {
   id: string; name: string; phone: string | null; email: string | null
-  address: string | null; id_number: string | null; credit_limit: number
+  address: string | null; id_number: string | null; kra_pin: string | null; credit_limit: number
   outstanding_balance: number; loyalty_points: number; notes: string | null; is_active: boolean
 }
 
@@ -182,6 +182,11 @@ export default function CustomersClient() {
                 {viewCustomer.email && (
                   <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200"><Mail className="w-4 h-4 text-slate-400 dark:text-slate-500" />{viewCustomer.email}</div>
                 )}
+                {viewCustomer.kra_pin && (
+                  <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200 col-span-2">
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">KRA PIN</span> {viewCustomer.kra_pin}
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-slate-50 rounded-xl p-3 text-center dark:bg-slate-800">
@@ -246,6 +251,7 @@ function CustomerFormModal({ customer, tenantId, onClose, onSaved }: {
     email: customer?.email ?? '',
     address: customer?.address ?? '',
     id_number: customer?.id_number ?? '',
+    kra_pin: customer?.kra_pin ?? '',
     credit_limit: customer?.credit_limit ?? 0,
     notes: customer?.notes ?? '',
   })
@@ -292,6 +298,12 @@ function CustomerFormModal({ customer, tenantId, onClose, onSaved }: {
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">ID Number</label>
               <input value={form.id_number} onChange={(e) => setForm((f) => ({ ...f, id_number: e.target.value }))} className={ic} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">KRA PIN</label>
+              <input value={form.kra_pin} onChange={(e) => setForm((f) => ({ ...f, kra_pin: e.target.value.toUpperCase() }))}
+                placeholder="e.g. A012345678Z" className={ic} />
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Optional — needed if this customer wants to claim input VAT on invoices.</p>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1 dark:text-slate-300">Credit Limit (KES)</label>

@@ -34,7 +34,7 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
   useEffect(() => {
     supabase
       .from('sales')
-      .select('*, customers(name, phone), profiles!cashier_id(full_name), sale_items(*, products(name, sku, unit)), payments(method, amount)')
+      .select('*, customers(name, phone, kra_pin), profiles!cashier_id(full_name), sale_items(*, products(name, sku, unit)), payments(method, amount)')
       .eq('id', saleId)
       .single()
       .then(({ data }) => { if (data) setSale(data as Record<string, unknown>) })
@@ -96,7 +96,9 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
     doc.setTextColor(...dark)
     if (customer) {
       doc.text(customer.name, 15, 56)
-      if (customer.phone) doc.text(`Tel: ${customer.phone}`, 15, 61)
+      let billToY = 56
+      if (customer.phone) { billToY += 5; doc.text(`Tel: ${customer.phone}`, 15, billToY) }
+      if (customer.kra_pin) { billToY += 5; doc.text(`PIN: ${customer.kra_pin}`, 15, billToY) }
     } else {
       doc.setTextColor(...gray)
       doc.text('Walk-in Customer', 15, 56)
@@ -104,7 +106,7 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
 
     // Items table
     autoTable(doc, {
-      startY: 68,
+      startY: 74,
       head: [['#', 'Description', 'SKU', 'Qty', 'Unit Price', 'Amount']],
       body: items.map((item, i) => {
         const prod = item.products as Record<string, string> | null
@@ -284,6 +286,7 @@ export default function InvoiceModal({ saleId, tenantName, tenantAddress, tenant
                 <div className="text-sm leading-relaxed">
                   <p className="font-semibold text-slate-800">{customer.name}</p>
                   {customer.phone && <p className="text-slate-500">Tel: {customer.phone}</p>}
+                  {customer.kra_pin && <p className="text-slate-500">PIN: {customer.kra_pin}</p>}
                 </div>
               ) : (
                 <p className="text-slate-500 italic">Walk-in Customer</p>

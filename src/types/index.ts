@@ -186,6 +186,7 @@ export interface Customer {
   phone: string | null
   address: string | null
   city: string | null
+  kra_pin: string | null
   loyalty_points: number
   total_spent: number
   notes: string | null

@@ -2584,6 +2584,7 @@ export type Database = {
           id: string
           id_number: string | null
           is_active: boolean | null
+          kra_pin: string | null
           loyalty_points: number | null
           name: string
           notes: string | null
@@ -2601,6 +2602,7 @@ export type Database = {
           id?: string
           id_number?: string | null
           is_active?: boolean | null
+          kra_pin?: string | null
           loyalty_points?: number | null
           name: string
           notes?: string | null
@@ -2618,6 +2620,7 @@ export type Database = {
           id?: string
           id_number?: string | null
           is_active?: boolean | null
+          kra_pin?: string | null
           loyalty_points?: number | null
           name?: string
           notes?: string | null

@@ -10,9 +10,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Verified against KRA's live infrastructure (BIGipServer cookie tagged for
+// the eTIMS sandbox) — the "-api" in the hostname is not optional, a missing
+// one silently lands on an unrelated site instead of KRA's real servers.
 const ETIMS_URLS = {
-  sandbox:    'https://etims-sbx.kra.go.ke/etims-api',
-  production: 'https://etims.kra.go.ke/etims-api',
+  sandbox:    'https://etims-api-sbx.kra.go.ke/etims-api',
+  production: 'https://etims-api.kra.go.ke/etims-api',
 }
 
 function round2(n: number) { return Math.round(n * 100) / 100 }
@@ -88,7 +91,7 @@ serve(async (req: Request) => {
     const [{ data: sale }, { data: tenant }] = await Promise.all([
       supabase
         .from('sales')
-        .select('*, customers(name, phone), profiles!cashier_id(full_name), sale_items(*, products(name, sku, etims_item_cls_cd, etims_tax_type_cd))')
+        .select('*, customers(name, phone, kra_pin), profiles!cashier_id(full_name), sale_items(*, products(name, sku, etims_item_cls_cd, etims_tax_type_cd))')
         .eq('id', saleId)
         .eq('tenant_id', tenantId)
         .single(),
@@ -168,7 +171,7 @@ serve(async (req: Request) => {
       invcNo:   invoiceNo,
       orgInvcNo: 0,
       cisInvcNo: '',
-      custTin:  null,
+      custTin:  customer?.kra_pin || null,
       custNm:   customer?.name || 'Walk-in Customer',
       salesSttsCd: '02',
       rcptTyCd: 'S',
@@ -192,7 +195,7 @@ serve(async (req: Request) => {
       modrId:   cashier?.full_name || 'cashier',
       modrNm:   cashier?.full_name || 'cashier',
       receipt: {
-        custTin:      null,
+        custTin:      customer?.kra_pin || null,
         custMblNo:    customer?.phone || null,
         rptNo:        invoiceNo,
         trdeNm:       tenant.name,
