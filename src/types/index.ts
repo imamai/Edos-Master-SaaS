@@ -403,6 +403,7 @@ export interface PurchaseOrder {
   total_amount: number
   payment_status: 'unpaid' | 'partial' | 'paid'
   amount_paid: number
+  supplier_invoice_ref: string | null
   expected_delivery_date: string | null
   notes: string | null
   email_sent_at: string | null
@@ -413,6 +414,20 @@ export interface PurchaseOrder {
   updated_at: string
   supplier?: Supplier
   items?: PurchaseOrderItem[]
+}
+
+export interface PurchaseOrderPayment {
+  id: string
+  tenant_id: string
+  purchase_order_id: string
+  supplier_id: string | null
+  amount: number
+  payment_method: 'cash' | 'bank_transfer' | 'mpesa' | 'cheque' | 'other'
+  reference: string | null
+  payment_date: string
+  notes: string | null
+  paid_by: string | null
+  created_at: string
 }
 
 export interface PurchaseOrderItem {

@@ -16,7 +16,8 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import type {
   Supplier, SupplierCatalog, PurchaseOrder,
-  PurchaseOrderItem, GoodsReceivedNote, GRNItem, Product
+  PurchaseOrderItem, GoodsReceivedNote, GRNItem, Product,
+  PurchaseOrderPayment
 } from '@/types'
 
 interface TenantBranding {
@@ -465,6 +466,8 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
   const [detailPO, setDetailPO] = useState<PurchaseOrder | null>(null)
   const [sendingId, setSendingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showBulkPay, setShowBulkPay] = useState(false)
 
   useEffect(() => {
     if (!tenantId) return
@@ -488,8 +491,27 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
   }, [tenantId, statusFilter, paymentFilter, supplierFilter])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => { setSelectedIds(new Set()) }, [statusFilter, paymentFilter, supplierFilter])
 
   const traceSupplierName = supplierFilter ? allSuppliers.find((s) => s.id === supplierFilter)?.name : null
+  const payableOrders = orders.filter((po) => po.status !== 'cancelled' && po.total_amount - po.amount_paid > 0)
+  const selectedPOs = orders.filter((po) => selectedIds.has(po.id))
+  const allPayableSelected = payableOrders.length > 0 && payableOrders.every((po) => selectedIds.has(po.id))
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) => {
+      if (allPayableSelected) return new Set()
+      return new Set(payableOrders.map((po) => po.id))
+    })
+  }
 
   async function sendEmail(po: PurchaseOrder) {
     setSendingId(po.id)
@@ -566,6 +588,12 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
           {allSuppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <div className="flex-1" />
+        {selectedIds.size > 0 && (
+          <button onClick={() => setShowBulkPay(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition">
+            <CheckCircle className="w-4 h-4" /> Pay Selected ({selectedIds.size})
+          </button>
+        )}
         <ExportMenu
           columns={[
             { header: 'PO Number', key: 'po_number', width: 16 },
@@ -577,6 +605,7 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
             { header: 'Payment Status', key: 'payment_status', width: 14 },
             { header: 'Amount Paid', key: 'amount_paid', width: 12 },
             { header: 'Balance Due', key: 'balance_due', width: 12 },
+            { header: 'Supplier Invoice #', key: 'supplier_invoice_ref', width: 16 },
           ]}
           rows={orders.map((po) => ({
             po_number: po.po_number,
@@ -588,6 +617,7 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
             payment_status: po.payment_status,
             amount_paid: po.amount_paid,
             balance_due: po.total_amount - po.amount_paid,
+            supplier_invoice_ref: po.supplier_invoice_ref ?? '',
           }))}
           filename={`purchase-orders-${new Date().toISOString().slice(0, 10)}`}
           title="Purchase Orders Report"
@@ -602,6 +632,11 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800">
+              <th className="px-4 py-3 w-8">
+                <input type="checkbox" checked={allPayableSelected} onChange={toggleSelectAll}
+                  disabled={payableOrders.length === 0}
+                  className="rounded" title="Select all payable orders" />
+              </th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">PO Number</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Supplier</th>
               <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Type</th>
@@ -615,21 +650,29 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
               Array.from({ length: 4 }).map((_, i) => (
-                <tr key={i}><td colSpan={8} className="px-4 py-3"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>
+                <tr key={i}><td colSpan={9} className="px-4 py-3"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>
               ))
             ) : orders.length === 0 ? (
-              <tr><td colSpan={8} className="text-center py-16 text-slate-400 dark:text-slate-500">
+              <tr><td colSpan={9} className="text-center py-16 text-slate-400 dark:text-slate-500">
                 <ShoppingBag className="w-10 h-10 mx-auto mb-2 opacity-40" />
                 <p>No purchase orders yet.</p>
               </td></tr>
             ) : (
-              orders.map((po) => (
+              orders.map((po) => {
+                const payable = po.status !== 'cancelled' && po.total_amount - po.amount_paid > 0
+                return (
                 <tr key={po.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+                  <td className="px-4 py-3">
+                    <input type="checkbox" checked={selectedIds.has(po.id)} onChange={() => toggleSelect(po.id)}
+                      disabled={!payable} title={payable ? 'Select for payment' : 'Nothing due'}
+                      className="rounded disabled:opacity-30" />
+                  </td>
                   <td className="px-4 py-3">
                     <button onClick={() => setDetailPO(po)} className="font-mono text-blue-600 dark:text-blue-400 hover:underline text-xs font-semibold">
                       {po.po_number}
                     </button>
                     <p className="text-xs text-slate-400 dark:text-slate-500">{new Date(po.created_at).toLocaleDateString('en-KE')}</p>
+                    {po.supplier_invoice_ref && <p className="text-xs text-slate-400 dark:text-slate-500">Inv: {po.supplier_invoice_ref}</p>}
                   </td>
                   <td className="px-4 py-3 text-slate-700 dark:text-slate-200 text-sm">
                     {(po.supplier as { name: string } | undefined)?.name ?? '—'}
@@ -684,7 +727,7 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
                     </div>
                   </td>
                 </tr>
-              ))
+              )})
             )}
           </tbody>
         </table>
@@ -700,6 +743,13 @@ function PurchaseOrdersTab({ initialSupplierFilter }: { initialSupplierFilter?: 
       )}
       {detailPO && (
         <PODetailModal po={detailPO} onClose={() => { setDetailPO(null); load() }} />
+      )}
+      {showBulkPay && selectedPOs.length > 0 && (
+        <BulkPayModal
+          orders={selectedPOs}
+          onClose={() => setShowBulkPay(false)}
+          onPaid={() => { setShowBulkPay(false); setSelectedIds(new Set()); load() }}
+        />
       )}
     </div>
   )
@@ -1388,6 +1438,10 @@ const paymentStatusColors: Record<string, string> = {
   paid: 'bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400',
 }
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: 'Cash', bank_transfer: 'Bank Transfer', mpesa: 'M-Pesa', cheque: 'Cheque', other: 'Other',
+}
+
 function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void }) {
   const supabase = createClient()
   const branding = useTenantBranding()
@@ -1396,12 +1450,22 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
   const [updating, setUpdating] = useState(false)
   const [showPayForm, setShowPayForm] = useState(false)
   const [payAmount, setPayAmount] = useState('')
+  const [payMethod, setPayMethod] = useState('bank_transfer')
+  const [payReference, setPayReference] = useState(po.supplier_invoice_ref ?? '')
+  const [payDate, setPayDate] = useState(new Date().toISOString().slice(0, 10))
   const [paying, setPaying] = useState(false)
+  const [payments, setPayments] = useState<PurchaseOrderPayment[]>([])
+  const [invoiceRef, setInvoiceRef] = useState(po.supplier_invoice_ref ?? '')
+  const [savedInvoiceRef, setSavedInvoiceRef] = useState(po.supplier_invoice_ref ?? '')
+  const [savingRef, setSavingRef] = useState(false)
   const balanceDue = po.total_amount - po.amount_paid
 
   useEffect(() => {
     supabase.from('purchase_order_items').select('*').eq('purchase_order_id', po.id)
       .then(({ data }) => { setItems((data as PurchaseOrderItem[]) ?? []); setLoading(false) })
+    supabase.from('purchase_order_payments').select('*').eq('purchase_order_id', po.id)
+      .order('payment_date', { ascending: false })
+      .then(({ data }) => setPayments((data as PurchaseOrderPayment[]) ?? []))
   }, [po.id])
 
   async function updateStatus(status: string) {
@@ -1412,17 +1476,32 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
     else { toast.success(`Status updated to ${status}`); onClose() }
   }
 
+  async function saveInvoiceRef() {
+    setSavingRef(true)
+    const trimmed = invoiceRef.trim()
+    const { error } = await supabase.from('purchase_orders')
+      .update({ supplier_invoice_ref: trimmed || null }).eq('id', po.id)
+    setSavingRef(false)
+    if (error) { toast.error(error.message); return }
+    setSavedInvoiceRef(trimmed)
+    toast.success('Supplier invoice number saved')
+  }
+
   async function recordPayment(e: React.FormEvent) {
     e.preventDefault()
     const amount = parseFloat(payAmount)
     if (!amount || amount <= 0) { toast.error('Enter a valid amount'); return }
     if (amount > balanceDue) { toast.error(`Amount exceeds balance due (${formatCurrency(balanceDue)})`); return }
     setPaying(true)
-    const newPaid = po.amount_paid + amount
-    const newStatus = newPaid >= po.total_amount ? 'paid' : 'partial'
-    const { error } = await supabase.from('purchase_orders')
-      .update({ amount_paid: newPaid, payment_status: newStatus })
-      .eq('id', po.id)
+    const { error } = await supabase.rpc('pay_purchase_orders', {
+      p_payments: [{
+        purchase_order_id: po.id,
+        amount,
+        payment_method: payMethod,
+        reference: payReference.trim() || null,
+        payment_date: payDate,
+      }],
+    })
     setPaying(false)
     if (error) toast.error(error.message)
     else { toast.success('Payment recorded'); onClose() }
@@ -1575,6 +1654,20 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
           <div><p className="text-xs text-slate-500 dark:text-slate-400">Balance Due</p>
             <p className={`font-semibold ${balanceDue > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>{formatCurrency(balanceDue)}</p>
           </div>
+          <div className="col-span-2">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Supplier Invoice # <span className="normal-case text-slate-400 dark:text-slate-500">(for tracing payments)</span></p>
+            <div className="flex items-center gap-2">
+              <input value={invoiceRef} onChange={(e) => setInvoiceRef(e.target.value)}
+                placeholder="e.g. INV-4021"
+                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              {invoiceRef !== savedInvoiceRef && (
+                <button onClick={saveInvoiceRef} disabled={savingRef}
+                  className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-40 flex items-center gap-1">
+                  {savingRef && <Loader2 className="w-3 h-3 animate-spin" />} Save
+                </button>
+              )}
+            </div>
+          </div>
           {po.notes && <div className="col-span-2"><p className="text-xs text-slate-500 dark:text-slate-400">Notes</p><p className="text-slate-700 dark:text-slate-200">{po.notes}</p></div>}
         </div>
 
@@ -1617,21 +1710,53 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
           <div className="flex justify-between font-semibold text-slate-900 dark:text-white border-t border-slate-200 dark:border-slate-700 pt-1"><span>Balance Due</span><span>{formatCurrency(balanceDue)}</span></div>
         </div>
 
+        {payments.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1.5">Payment History</p>
+            <div className="border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden">
+              {payments.map((p) => (
+                <div key={p.id} className="flex items-center justify-between px-3 py-2 text-xs">
+                  <div>
+                    <span className="font-medium text-slate-700 dark:text-slate-200">{new Date(p.payment_date).toLocaleDateString('en-KE')}</span>
+                    <span className="text-slate-400 dark:text-slate-500 mx-1.5">·</span>
+                    <span className="text-slate-500 dark:text-slate-400">{PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method}</span>
+                    {p.reference && <span className="text-slate-400 dark:text-slate-500"> · Ref: {p.reference}</span>}
+                  </div>
+                  <span className="font-semibold text-green-600 dark:text-green-400">{formatCurrency(p.amount)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {po.status !== 'cancelled' && balanceDue > 0 && (
           <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-3">
             {showPayForm ? (
-              <form onSubmit={recordPayment} className="flex items-center gap-2">
-                <input type="number" min="0" max={balanceDue} step="0.01" autoFocus
-                  value={payAmount} onChange={(e) => setPayAmount(e.target.value)}
-                  placeholder={`Up to ${formatCurrency(balanceDue)}`}
-                  className="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                <button type="submit" disabled={paying}
-                  className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-40 flex items-center gap-1.5">
-                  {paying && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Record
-                </button>
-                <button type="button" onClick={() => setShowPayForm(false)} className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
-                  Cancel
-                </button>
+              <form onSubmit={recordPayment} className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" min="0" max={balanceDue} step="0.01" autoFocus
+                    value={payAmount} onChange={(e) => setPayAmount(e.target.value)}
+                    placeholder={`Up to ${formatCurrency(balanceDue)}`}
+                    className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    {Object.entries(PAYMENT_METHOD_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                  <input value={payReference} onChange={(e) => setPayReference(e.target.value)}
+                    placeholder="Supplier invoice # / txn ref"
+                    className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button type="submit" disabled={paying}
+                    className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-40 flex items-center gap-1.5">
+                    {paying && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Record Payment
+                  </button>
+                  <button type="button" onClick={() => setShowPayForm(false)} className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition">
+                    Cancel
+                  </button>
+                </div>
               </form>
             ) : (
               <button onClick={() => setShowPayForm(true)}
@@ -1663,6 +1788,122 @@ function PODetailModal({ po, onClose }: { po: PurchaseOrder; onClose: () => void
           </div>
         )}
       </div>
+    </ModalShell>
+  )
+}
+
+function BulkPayModal({ orders, onClose, onPaid }: {
+  orders: PurchaseOrder[]; onClose: () => void; onPaid: () => void
+}) {
+  const supabase = createClient()
+  const [payMethod, setPayMethod] = useState('bank_transfer')
+  const [payReference, setPayReference] = useState('')
+  const [payDate, setPayDate] = useState(new Date().toISOString().slice(0, 10))
+  const [payNotes, setPayNotes] = useState('')
+  const [amounts, setAmounts] = useState<Record<string, string>>(() =>
+    Object.fromEntries(orders.map((po) => [po.id, String(po.total_amount - po.amount_paid)]))
+  )
+  const [paying, setPaying] = useState(false)
+
+  const ic = 'w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+
+  const total = orders.reduce((s, po) => s + (parseFloat(amounts[po.id]) || 0), 0)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const payments = orders
+      .map((po) => ({ po, amount: parseFloat(amounts[po.id]) || 0 }))
+      .filter(({ amount }) => amount > 0)
+
+    if (payments.length === 0) { toast.error('Enter at least one payment amount'); return }
+    for (const { po, amount } of payments) {
+      const balanceDue = po.total_amount - po.amount_paid
+      if (amount > balanceDue) {
+        toast.error(`Amount for ${po.po_number} exceeds balance due (${formatCurrency(balanceDue)})`)
+        return
+      }
+    }
+
+    setPaying(true)
+    const { error } = await supabase.rpc('pay_purchase_orders', {
+      p_payments: payments.map(({ po, amount }) => ({
+        purchase_order_id: po.id,
+        amount,
+        payment_method: payMethod,
+        reference: payReference.trim() || null,
+        payment_date: payDate,
+        notes: payNotes.trim() || null,
+      })),
+    })
+    setPaying(false)
+    if (error) { toast.error(error.message); return }
+    toast.success(`Recorded ${payments.length} payment${payments.length > 1 ? 's' : ''}`)
+    onPaid()
+  }
+
+  return (
+    <ModalShell title={`Pay ${orders.length} Purchase Order${orders.length > 1 ? 's' : ''}`} onClose={onClose} maxW="max-w-lg">
+      <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <div className="border border-slate-200 dark:border-slate-700 rounded-xl divide-y divide-slate-100 dark:divide-slate-800 overflow-hidden max-h-56 overflow-y-auto">
+          {orders.map((po) => {
+            const balanceDue = po.total_amount - po.amount_paid
+            return (
+              <div key={po.id} className="flex items-center gap-3 px-3 py-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 truncate">{po.po_number}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {(po.supplier as { name: string } | undefined)?.name ?? '—'}
+                    {po.supplier_invoice_ref && <span className="text-slate-400 dark:text-slate-500"> · Inv: {po.supplier_invoice_ref}</span>}
+                  </p>
+                </div>
+                <p className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap">of {formatCurrency(balanceDue)}</p>
+                <input type="number" min="0" max={balanceDue} step="0.01"
+                  value={amounts[po.id] ?? ''}
+                  onChange={(e) => setAmounts((a) => ({ ...a, [po.id]: e.target.value }))}
+                  className="w-24 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs text-right text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Payment Method</label>
+            <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={ic}>
+              {Object.entries(PAYMENT_METHOD_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Payment Date</label>
+            <input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className={ic} />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+              Supplier Invoice # / Transaction Ref <span className="text-slate-400 dark:text-slate-500 font-normal normal-case">(applied to every selected PO for trace)</span>
+            </label>
+            <input value={payReference} onChange={(e) => setPayReference(e.target.value)}
+              placeholder="e.g. INV-4021 or M-Pesa code" className={ic} />
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Notes (optional)</label>
+            <input value={payNotes} onChange={(e) => setPayNotes(e.target.value)} className={ic} />
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-sm">
+          <span className="text-slate-600 dark:text-slate-300">Total to pay</span>
+          <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(total)}</span>
+        </div>
+
+        <div className="flex gap-3 pt-1">
+          <button type="button" onClick={onClose} className="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-medium text-sm">Cancel</button>
+          <button type="submit" disabled={paying || total <= 0}
+            className="flex-1 py-2.5 bg-green-600 text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 disabled:opacity-40">
+            {paying && <Loader2 className="w-4 h-4 animate-spin" />}
+            Record {formatCurrency(total)} Payment
+          </button>
+        </div>
+      </form>
     </ModalShell>
   )
 }

@@ -9117,6 +9117,7 @@ export type Database = {
           name: string
           reorder_level: number
           tenant_id: string
+          tracking_mode: Database["public"]["Enums"]["edoslmis_inventory_tracking_mode"]
           unit_of_measure: string
           updated_at: string
         }
@@ -9132,6 +9133,7 @@ export type Database = {
           name: string
           reorder_level?: number
           tenant_id: string
+          tracking_mode?: Database["public"]["Enums"]["edoslmis_inventory_tracking_mode"]
           unit_of_measure?: string
           updated_at?: string
         }
@@ -9147,6 +9149,7 @@ export type Database = {
           name?: string
           reorder_level?: number
           tenant_id?: string
+          tracking_mode?: Database["public"]["Enums"]["edoslmis_inventory_tracking_mode"]
           unit_of_measure?: string
           updated_at?: string
         }
@@ -11292,6 +11295,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          is_active: boolean
           label: string
           list_key: string
           sort_order: number
@@ -11302,6 +11306,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_active?: boolean
           label: string
           list_key: string
           sort_order?: number
@@ -11312,6 +11317,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          is_active?: boolean
           label?: string
           list_key?: string
           sort_order?: number
@@ -11862,6 +11868,67 @@ export type Database = {
           },
         ]
       }
+      edoslmis_supplier_catalog_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          item_id: string
+          notes: string | null
+          supplier_id: string
+          supplier_sku: string | null
+          tenant_id: string
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id: string
+          notes?: string | null
+          supplier_id: string
+          supplier_sku?: string | null
+          tenant_id: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id?: string
+          notes?: string | null
+          supplier_id?: string
+          supplier_sku?: string | null
+          tenant_id?: string
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edoslmis_supplier_catalog_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "edoslmis_inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edoslmis_supplier_catalog_items_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "edoslmis_suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edoslmis_supplier_catalog_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "edoshms_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       edoslmis_supplier_payments: {
         Row: {
           amount: number
@@ -12324,6 +12391,48 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "edoshms_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      edoslmis_user_permission_overrides: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          permission: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          permission?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "edoslmis_user_permission_overrides_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "edoshms_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "edoslmis_user_permission_overrides_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "edoshms_user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -16803,6 +16912,84 @@ export type Database = {
           },
         ]
       }
+      purchase_order_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          paid_by: string | null
+          payment_date: string
+          payment_method: string
+          purchase_order_id: string
+          reference: string | null
+          supplier_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_by?: string | null
+          payment_date?: string
+          payment_method?: string
+          purchase_order_id: string
+          reference?: string | null
+          supplier_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_by?: string | null
+          payment_date?: string
+          payment_method?: string
+          purchase_order_id?: string
+          reference?: string | null
+          supplier_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_payments_paid_by_fkey"
+            columns: ["paid_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_payments_purchase_order_id_fkey"
+            columns: ["purchase_order_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_payments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_payments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "vw_farm_daily_dashboard"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       purchase_orders: {
         Row: {
           amount_paid: number
@@ -16825,6 +17012,7 @@ export type Database = {
           status: string | null
           subtotal: number | null
           supplier_id: string
+          supplier_invoice_ref: string | null
           tax_amount: number | null
           tenant_id: string | null
           total_amount: number | null
@@ -16852,6 +17040,7 @@ export type Database = {
           status?: string | null
           subtotal?: number | null
           supplier_id: string
+          supplier_invoice_ref?: string | null
           tax_amount?: number | null
           tenant_id?: string | null
           total_amount?: number | null
@@ -16879,6 +17068,7 @@ export type Database = {
           status?: string | null
           subtotal?: number | null
           supplier_id?: string
+          supplier_invoice_ref?: string | null
           tax_amount?: number | null
           tenant_id?: string | null
           total_amount?: number | null
@@ -19371,8 +19561,8 @@ export type Database = {
       edoslmis_list_staff_with_roles: {
         Args: never
         Returns: {
+          custom_permissions: Json
           first_name: string
-          is_active: boolean
           last_name: string
           roles: Json
           staff_category: string
@@ -19441,6 +19631,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      edoslmis_record_bulk_supplier_payments: {
+        Args: {
+          p_amounts: number[]
+          p_bill_ids: string[]
+          p_notes?: string
+          p_payment_method: string
+          p_reference_number?: string
+        }
+        Returns: {
+          amount: number
+          bill_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          paid_at: string
+          payment_method: string
+          received_by: string | null
+          reference_number: string | null
+          tenant_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "edoslmis_supplier_payments"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       edoslmis_record_payment: {
         Args: {
           p_amount: number
@@ -19473,6 +19690,7 @@ export type Database = {
           p_batch_id?: string
           p_item_id: string
           p_notes?: string
+          p_performed_at?: string
           p_quantity_change: number
           p_reference_order_test_id?: string
           p_transaction_type: Database["public"]["Enums"]["edoslmis_stock_transaction_type"]
@@ -19536,6 +19754,10 @@ export type Database = {
       }
       edoslmis_set_tenant_active: {
         Args: { p_is_active: boolean; p_tenant_id: string }
+        Returns: undefined
+      }
+      edoslmis_set_user_permission_overrides: {
+        Args: { p_permissions: string[]; p_user_id: string }
         Returns: undefined
       }
       edoslmis_update_stock_transaction: {
@@ -19661,6 +19883,28 @@ export type Database = {
           p_timezone?: string
         }
         Returns: Json
+      }
+      pay_purchase_orders: {
+        Args: { p_payments: Json }
+        Returns: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          paid_by: string | null
+          payment_date: string
+          payment_method: string
+          purchase_order_id: string
+          reference: string | null
+          supplier_id: string | null
+          tenant_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "purchase_order_payments"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -19841,6 +20085,7 @@ export type Database = {
         | "calibrator"
         | "control"
         | "other"
+      edoslmis_inventory_tracking_mode: "order_driven" | "manual_entry"
       edoslmis_invoice_status:
         | "draft"
         | "issued"
@@ -19968,6 +20213,7 @@ export type Database = {
         | "transfer_in"
         | "transfer_out"
         | "stock_count_correction"
+        | "manual_usage"
       edoslmis_supplier_bill_status:
         | "issued"
         | "partially_paid"
@@ -20507,6 +20753,7 @@ export const Constants = {
         "control",
         "other",
       ],
+      edoslmis_inventory_tracking_mode: ["order_driven", "manual_entry"],
       edoslmis_invoice_status: [
         "draft",
         "issued",
@@ -20653,6 +20900,7 @@ export const Constants = {
         "transfer_in",
         "transfer_out",
         "stock_count_correction",
+        "manual_usage",
       ],
       edoslmis_supplier_bill_status: [
         "issued",

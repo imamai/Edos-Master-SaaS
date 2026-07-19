@@ -7,7 +7,7 @@ ate# EdosPoa – Deployment Guide
 - A Stripe account (for card payments)
 - A Safaricom Daraja account (for M-Pesa)
 - A Vercel account (recommended for hosting)
-- Domain: `edos.co.ke` (or your own)
+- Domain: `edoscentre.co.ke` (or your own)
 
 ---
 
