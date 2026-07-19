@@ -53,9 +53,14 @@ export default function StockAdjustModal({ product, branchId, tenantId, onClose,
       )
 
     if (!invError) {
+      // stock_movements.type has a DB check constraint (purchase/sale/
+      // return/adjustment/transfer/damage) — 'in'/'out' aren't in it, so
+      // this insert used to fail silently and the trail never recorded
+      // manual stock-in/out. Direction is already carried by the sign
+      // of quantity, so both map to 'adjustment'.
       await db.from('stock_movements').insert({
         tenant_id: tenantId, product_id: product.id, branch_id: branchId,
-        type: type === 'adjust' ? 'adjustment' : type,
+        type: 'adjustment',
         quantity: type === 'adjust' ? newQty - currentQty : (type === 'in' ? quantity : -quantity),
         notes: notes || null,
       })
