@@ -1932,6 +1932,17 @@ function CreateGRNModal({ tenantId, editGRN, onClose, onSaved }: {
   useEffect(() => {
     supabase.from('suppliers').select('id,name').eq('tenant_id', tenantId).eq('is_active', true).order('name')
       .then(({ data }) => setSuppliers((data as Supplier[]) ?? []))
+    // All open POs up front (not gated behind picking a supplier first) so
+    // "select the PO" can be the primary action — the supplier is then
+    // derived from whichever PO is chosen, instead of typed/picked twice.
+    // Goods can arrive against a PO regardless of whether it was formally
+    // "sent"/"approved" in the system — only exclude POs that can no longer
+    // receive anything (cancelled, or already fully delivered).
+    supabase.from('purchase_orders')
+      .select('id,po_number,supplier_id,supplier_invoice_ref,supplier:suppliers(name)')
+      .eq('tenant_id', tenantId).not('status', 'in', '(cancelled,delivered)')
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setPos((data as PurchaseOrder[]) ?? []))
   }, [tenantId])
 
   useEffect(() => {
@@ -1954,12 +1965,18 @@ function CreateGRNModal({ tenantId, editGRN, onClose, onSaved }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editGRN?.id])
 
-  useEffect(() => {
-    if (!form.supplier_id) { setPos([]); return }
-    supabase.from('purchase_orders').select('id,po_number').eq('tenant_id', tenantId)
-      .eq('supplier_id', form.supplier_id).in('status', ['sent', 'approved', 'partial'])
-      .then(({ data }) => setPos((data as PurchaseOrder[]) ?? []))
-  }, [form.supplier_id, tenantId])
+  function selectPO(poId: string) {
+    const po = pos.find((p) => p.id === poId)
+    setForm((f) => ({
+      ...f,
+      purchase_order_id: poId,
+      supplier_id: po?.supplier_id || f.supplier_id,
+      // Carry over the invoice ref already on the PO (e.g. set on an earlier
+      // partial delivery) so it doesn't need retyping — still editable below
+      // since a PO can span deliveries under more than one supplier invoice.
+      supplier_invoice_ref: po?.supplier_invoice_ref || f.supplier_invoice_ref,
+    }))
+  }
 
   useEffect(() => {
     // In edit mode, items come from the GRN's own saved grn_items (loaded
@@ -2081,17 +2098,25 @@ function CreateGRNModal({ tenantId, editGRN, onClose, onSaved }: {
       <form onSubmit={handleSubmit} className="p-5 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Supplier *</label>
-            <select value={form.supplier_id} onChange={(e) => setForm((f) => ({ ...f, supplier_id: e.target.value, purchase_order_id: '' }))} className={ic} required>
-              <option value="">Select supplier…</option>
-              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+              Linked Purchase Order <span className="normal-case text-slate-400 dark:text-slate-500 font-normal">(pulls in expected items)</span>
+            </label>
+            <select value={form.purchase_order_id} onChange={(e) => selectPO(e.target.value)} className={ic}>
+              <option value="">None (manual entry)</option>
+              {pos.map((po) => (
+                <option key={po.id} value={po.id}>
+                  {po.po_number} — {(po.supplier as { name: string } | undefined)?.name ?? 'Unknown supplier'}
+                </option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Linked Purchase Order</label>
-            <select value={form.purchase_order_id} onChange={(e) => setForm((f) => ({ ...f, purchase_order_id: e.target.value }))} className={ic}>
-              <option value="">None (manual entry)</option>
-              {pos.map((po) => <option key={po.id} value={po.id}>{po.po_number}</option>)}
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Supplier *</label>
+            <select value={form.supplier_id}
+              onChange={(e) => setForm((f) => ({ ...f, supplier_id: e.target.value }))}
+              disabled={!!form.purchase_order_id} className={`${ic} disabled:opacity-60`} required>
+              <option value="">Select supplier…</option>
+              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
           <div>
